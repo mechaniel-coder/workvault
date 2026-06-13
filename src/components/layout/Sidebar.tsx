@@ -1,82 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Clock,
-  FileText,
-  Receipt,
-  Shield,
-  BadgeCheck,
-  Globe,
-  Archive,
-  Users,
-  Settings,
-  Box,
-  Kanban,
-  FileSignature,
-  Wallet,
-  AlertTriangle,
-  FolderOpen,
-  Wrench,
-  HardHat,
-  Info,
-  Package,
-  Plug,
-  FileSpreadsheet,
-  UserCircle2,
-  Terminal,
-  Inbox,
-} from 'lucide-react'
+import { Box, Info, Package } from 'lucide-react'
 import { useDemoOptional } from '../../context/DemoContext'
-
-const navSections = [
-  {
-    label: 'Overview',
-    items: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/time', icon: Clock, label: 'Time Tracker' },
-      { to: '/pipeline', icon: Kanban, label: 'Pipeline' },
-    ],
-  },
-  {
-    label: 'Business',
-    items: [
-      { to: '/proposals', icon: FileSignature, label: 'Proposals' },
-      { to: '/contracts', icon: FileText, label: 'Contracts' },
-      { to: '/invoices', icon: Receipt, label: 'Invoices' },
-      { to: '/inbox', icon: Inbox, label: 'Inbox' },
-      { to: '/finance', icon: Wallet, label: 'Finance' },
-      { to: '/tax-1099', icon: FileSpreadsheet, label: '1099 Filing' },
-      { to: '/clients', icon: Users, label: 'Clients' },
-    ],
-  },
-  {
-    label: 'Operations',
-    items: [
-      { to: '/scope', icon: AlertTriangle, label: 'Scope Log' },
-      { to: '/documents', icon: FolderOpen, label: 'Documents' },
-      { to: '/tools', icon: Wrench, label: 'Tools' },
-      { to: '/subcontractors', icon: HardHat, label: 'Subcontractors' },
-    ],
-  },
-  {
-    label: 'Protection',
-    items: [
-      { to: '/protection', icon: Shield, label: 'Work Protection' },
-      { to: '/licenses', icon: BadgeCheck, label: 'Licenses' },
-      { to: '/hosting', icon: Globe, label: 'Hosting' },
-      { to: '/records', icon: Archive, label: 'Work Records' },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
-      { to: '/team', icon: UserCircle2, label: 'Team' },
-      { to: '/integrations', icon: Plug, label: 'Integrations' },
-      { to: '/cursor-cli', icon: Terminal, label: 'Cursor CLI' },
-      { to: '/settings', icon: Settings, label: 'Settings' },
-    ],
-  },
-]
+import { useIndustry } from '../../context/IndustryContext'
+import { buildNavSections } from '../../lib/industry-nav'
 
 const demoAccountSection = {
   label: 'Your deliverable',
@@ -94,7 +20,9 @@ type SidebarProps = {
 
 export function Sidebar({ demoMode }: SidebarProps) {
   const demo = useDemoOptional()
+  const { config } = useIndustry()
   const prefix = demo?.basePath ?? ''
+  const navSections = buildNavSections(config)
   const sections = demoMode
     ? [
         demoAccountSection,
@@ -104,7 +32,7 @@ export function Sidebar({ demoMode }: SidebarProps) {
     : navSections
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-surface-200/80 bg-white/95 backdrop-blur-xl">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden md:flex w-64 flex-col border-r border-surface-200/80 bg-white/95 backdrop-blur-xl">
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="relative">
           <div className="absolute inset-0 rounded-xl bg-brand-500/20 blur-md" />
@@ -115,7 +43,7 @@ export function Sidebar({ demoMode }: SidebarProps) {
         <div>
           <h1 className="text-base font-bold text-surface-900 tracking-tight">WorkVault</h1>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-500/70">
-            {demoMode ? 'Preview' : 'Pro Edition'}
+            {demoMode ? 'Preview' : config.editionLabel}
           </p>
         </div>
       </div>
@@ -162,9 +90,9 @@ export function Sidebar({ demoMode }: SidebarProps) {
           </>
         ) : (
           <>
-            <p className="text-xs font-semibold text-brand-700 mb-0.5">Local & Private</p>
+            <p className="text-xs font-semibold text-brand-700 mb-0.5">{config.shortLabel} workspace</p>
             <p className="text-[11px] text-surface-500 leading-relaxed">
-              Your data stays on your device. Encrypted cloud sync available in Settings.
+              Tailored for {config.label.toLowerCase()}. Change industry anytime in Settings.
             </p>
           </>
         )}

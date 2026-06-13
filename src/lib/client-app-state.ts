@@ -46,6 +46,7 @@ export function buildClientAppState(clientId: string, state: AppState): AppState
       contractPrefix: state.profile.contractPrefix,
       paymentMethods: state.profile.paymentMethods.filter((m) => m.enabled),
       defaultPaymentInstructions: state.profile.defaultPaymentInstructions,
+      industryId: state.profile.industryId,
     },
     clients: [{ ...client }],
     contracts: state.contracts.filter((c) => c.clientId === clientId),

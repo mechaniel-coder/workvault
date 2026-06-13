@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { StoreProvider } from './context/StoreContext'
+import { IndustryProvider } from './context/IndustryContext'
 import { AppGate } from './components/AppGate'
 import { AppLayout } from './components/layout/AppLayout'
 import Dashboard from './pages/Dashboard'
@@ -38,6 +39,7 @@ import Subcontractors from './pages/Subcontractors'
 import Tax1099 from './pages/Tax1099'
 import Inbox from './pages/Inbox'
 import ClientWorkspaceOpen from './pages/ClientWorkspaceOpen'
+import IndustryWelcome from './pages/IndustryWelcome'
 
 function ProtectedApp() {
   return (
@@ -93,8 +95,11 @@ export default function App() {
   return (
     <AuthProvider>
       <StoreProvider>
+        <IndustryProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/welcome" element={<IndustryWelcome />} />
+            <Route path="/welcome/:industryId" element={<IndustryWelcome />} />
             <Route path="/sign/:token" element={<SignContractPage />} />
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/open-client" element={<ClientWorkspaceOpen />} />
@@ -116,6 +121,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </IndustryProvider>
       </StoreProvider>
     </AuthProvider>
   )

@@ -14,7 +14,13 @@ export function AppGate({ children }: { children: ReactNode }) {
 
   if (!storageReady || authLoading) {
     if (setupDone) return null
-    return <LoadingScreen onComplete={() => {}} minDuration={600} />
+    return (
+      <LoadingScreen
+        onComplete={() => {}}
+        minDuration={600}
+        industryId={state.profile.industryId}
+      />
+    )
   }
 
   if (!setupDone) {

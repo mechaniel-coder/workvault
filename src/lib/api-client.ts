@@ -1,10 +1,12 @@
-import { DESKTOP_API_BASE, isDesktopApp } from './platform'
+import { getApiBase, isCapacitorNative, isDesktopApp } from './platform'
 
-/** Resolve `/api/...` to Netlify when running the desktop app. */
+/** Resolve `/api/...` to remote backend when not same-origin (desktop, mobile app, self-host). */
 export function apiUrl(path: string): string {
   const normalized = path.startsWith('/') ? path : `/${path}`
-  if (isDesktopApp() || import.meta.env.VITE_DESKTOP === '1') {
-    return `${DESKTOP_API_BASE}${normalized}`
+  const base = getApiBase()
+  if (base) return `${base}${normalized}`
+  if (isDesktopApp() || isCapacitorNative() || import.meta.env.VITE_DESKTOP === '1') {
+    return `https://workvault.netlify.app${normalized}`
   }
   return normalized
 }

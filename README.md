@@ -10,22 +10,24 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mechaniel-coder/workvault/releases/latest"><img src="https://img.shields.io/github/v/release/mechaniel-coder/workvault?label=Download%20Mac%20App&color=4f46e5" alt="Latest release" /></a>
-  <a href="https://github.com/mechaniel-coder/workvault/actions/workflows/ci.yml"><img src="https://github.com/mechaniel-coder/workvault/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://workvault.netlify.app"><img src="https://img.shields.io/badge/web-workvault.netlify.app-38bdf8" alt="Web app" /></a>
+  <a href="https://github.com/mechaniel-coder/workvault/releases/latest"><img src="https://img.shields.io/github/v/release/mechaniel-coder/workvault?label=Download%20Desktop&color=4f46e5" alt="Latest release" /></a>
+  <a href="https://github.com/mechaniel-coder/workvault/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mechaniel-coder/workvault/ci.yml?label=CI" alt="CI" /></a>
+  <a href="https://workvault.netlify.app"><img src="https://img.shields.io/badge/web-PWA%20%26%20mobile-38bdf8" alt="Web app" /></a>
 </p>
 
 ---
 
 ## Download the app (recommended)
 
-WorkVault is a **Mac desktop app**. Your data lives on your machine — not in a browser tab.
+WorkVault is a **desktop app** for Mac, Windows, and Linux. Your data lives on your machine — not in a browser tab.
 
 | Platform | Download |
 |----------|----------|
-| **macOS** (Apple Silicon — M1/M2/M3/M4) | [**Download latest `.dmg`**](https://github.com/mechaniel-coder/workvault/releases/latest) |
+| **macOS** (Apple Silicon — M1/M2/M3/M4) | [**Download `.dmg`**](https://github.com/mechaniel-coder/workvault/releases/latest) |
+| **Windows** (64-bit) | [**Download `.exe` installer**](https://github.com/mechaniel-coder/workvault/releases/latest) |
+| **Linux** (64-bit) | [**Download `.AppImage` / `.deb`**](https://github.com/mechaniel-coder/workvault/releases/latest) |
 
-### Install in 3 steps
+### macOS — install in 3 steps
 
 1. **Download** the `.dmg` from [Releases](https://github.com/mechaniel-coder/workvault/releases/latest)
 2. **Open** the disk image and drag **WorkVault** into **Applications**
@@ -34,9 +36,56 @@ WorkVault is a **Mac desktop app**. Your data lives on your machine — not in a
 > **First launch:** macOS may show an “unidentified developer” warning because the app is not notarized yet.  
 > Right-click **WorkVault → Open**, then confirm once.
 
-Your data is stored at:
+Data is stored at: `~/Library/Application Support/com.workvault.desktop/`
 
-`~/Library/Application Support/com.workvault.desktop/workvault-state.json`
+### Windows — install in 3 steps
+
+1. **Download** the `.exe` installer from [Releases](https://github.com/mechaniel-coder/workvault/releases/latest)
+2. **Run** the installer (SmartScreen may warn — click **More info → Run anyway** if needed)
+3. **Launch** WorkVault from the Start menu
+
+Data is stored at: `%APPDATA%\com.workvault.desktop\`
+
+### Linux — install
+
+1. **Download** `.AppImage` or `.deb` from [Releases](https://github.com/mechaniel-coder/workvault/releases/latest)
+2. **AppImage:** `chmod +x WorkVault*.AppImage && ./WorkVault*.AppImage`
+3. **Deb:** `sudo dpkg -i workvault*.deb`
+
+Data is stored at: `~/.local/share/com.workvault.desktop/`
+
+---
+
+## Mobile (PWA)
+
+On a phone or tablet, open [workvault.netlify.app](https://workvault.netlify.app):
+
+- **Android:** tap **Install app** when prompted
+- **iOS:** Share → **Add to Home Screen**
+
+The PWA includes bottom navigation and offline shell caching. For App Store / Play Store builds, see [docs/PLATFORMS.md](docs/PLATFORMS.md).
+
+---
+
+## Industry workspaces (v0.2.0)
+
+WorkVault adapts to how you work. Pick your industry during setup or at [workvault.netlify.app/welcome](https://workvault.netlify.app/welcome):
+
+| Industry | What's tailored |
+|----------|-----------------|
+| **General** | Full feature set — default experience |
+| **Creative & Design** | Creative rights, proposals, portfolio records |
+| **Software & Tech** | SOWs, IP protection, Cursor CLI, deployments |
+| **Construction & Trades** | Change orders, subs, licenses, customers |
+| **Consulting & Coaching** | Engagements, session tracking, proposals |
+| **Marketing & Agency** | Campaign pipeline, pitch decks, retainers |
+
+Each industry changes **navigation**, **labels**, **dashboard copy**, **theme colors**, and **welcome/website pages**. Change anytime in **Settings → Industry & workspace**.
+
+Industry-specific welcome URLs (shareable):
+- `https://workvault.netlify.app/welcome/construction`
+- `https://workvault.netlify.app/welcome/software`
+- etc.
 
 ---
 
@@ -55,7 +104,7 @@ Online features (via [workvault.netlify.app](https://workvault.netlify.app)):
 - Payment processors, Gmail, QuickBooks/Xero, Google Drive/Dropbox, Slack, and more
 - Hosted **client workspace links**
 
-You do **not** need the website for daily work — the Mac app is primary.
+You do **not** need the website for daily work — the desktop app is primary.
 
 ---
 
@@ -72,13 +121,26 @@ Clients can also open a shared link at `/client/:token` or import a file at [wor
 
 ---
 
+## Self-host (optional)
+
+Run WorkVault on your own server with Docker:
+
+```bash
+cd deploy
+docker compose up -d --build
+```
+
+See [docs/PLATFORMS.md](docs/PLATFORMS.md) for API proxy options and full platform details.
+
+---
+
 ## Architecture
 
 ```mermaid
 flowchart LR
-  subgraph device [Your Mac]
-    App[WorkVault.app]
-    Disk[(Local data on disk)]
+  subgraph device [Your device]
+    App[WorkVault desktop / mobile]
+    Disk[(Local data)]
     App --> Disk
   end
   subgraph netlify [Netlify — optional]
@@ -99,6 +161,7 @@ flowchart LR
 
 - Node.js 20+
 - Rust ([rustup](https://rustup.rs)) — for desktop builds only
+- Xcode / Android Studio — for Capacitor store builds only
 
 ### Web (Netlify)
 
@@ -107,7 +170,7 @@ git clone https://github.com/mechaniel-coder/workvault.git
 cd workvault
 npm install
 npm run dev          # local dev
-npm run build        # production build
+npm run build        # production build (includes PWA)
 ```
 
 Deploys automatically from `main` to [workvault.netlify.app](https://workvault.netlify.app) when connected in Netlify.
@@ -117,19 +180,28 @@ Deploys automatically from `main` to [workvault.netlify.app](https://workvault.n
 ```bash
 npm install
 npm run tauri:dev    # hot-reload desktop app
-npm run installer    # build .dmg in src-tauri/target/release/bundle/dmg/
+npm run installer    # .dmg / .exe / .AppImage / .deb on your OS
+```
+
+### Mobile native (Capacitor)
+
+```bash
+npm run build:mobile
+npx cap add ios && npx cap add android   # first time only
+npm run cap:sync
+npm run cap:ios      # or cap:android
 ```
 
 ### Cut a release
 
-Releases are built automatically when you push a version tag:
+Push a version tag to build Mac, Windows, and Linux installers:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-GitHub Actions builds the Mac `.dmg` and attaches it to the release.
+If GitHub Actions fails to start, build locally on each OS and upload assets to the release manually.
 
 ---
 
@@ -138,7 +210,10 @@ GitHub Actions builds the Mac `.dmg` and attaches it to the release.
 | Path | Purpose |
 |------|---------|
 | `src/` | React app (contractor UI, client shells, settings) |
-| `src-tauri/` | Mac desktop wrapper (Tauri) |
+| `src-tauri/` | Desktop wrapper (Tauri — Mac/Win/Linux) |
+| `capacitor.config.ts` | iOS/Android native shell config |
+| `deploy/` | Docker self-host stack |
+| `docs/PLATFORMS.md` | Full multi-platform guide |
 | `netlify/functions/` | Serverless API (payments, OAuth, AI, sync) |
 | `netlify.toml` | Netlify build & SPA routing |
 

@@ -10,15 +10,35 @@ import {
   ArrowRight,
   Plus,
   Sparkles,
+  Kanban,
+  FileSignature,
+  Terminal,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
+import { useIndustry } from '../context/IndustryContext'
 import { Card, StatCard } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { formatCurrency, formatDate, formatDuration, computeLicenseStatus, computeInvoiceStatus } from '../lib/utils'
+import { findNavItem } from '../lib/industry-nav'
+
+const ACTION_ICONS: Record<string, LucideIcon> = {
+  '/time': Clock,
+  '/contracts': FileText,
+  '/invoices': Receipt,
+  '/protection': Shield,
+  '/clients': Plus,
+  '/proposals': FileSignature,
+  '/pipeline': Kanban,
+  '/scope': AlertTriangle,
+  '/cursor-cli': Terminal,
+}
 
 export default function Dashboard() {
   const { state } = useStore()
+  const { config } = useIndustry()
   const { profile, timeEntries, contracts, invoices, licenses, workProtections, clients } = state
+  const { terminology, dashboard } = config
 
   const thisWeekMinutes = timeEntries
     .filter((e) => {
@@ -67,15 +87,40 @@ export default function Dashboard() {
       severity: 'danger' as const,
     })),
     ...expiringLicenses.map((l) => ({
-      message: `License "${l.name}" expires ${formatDate(l.expiryDate)}`,
+      message: `${terminology.licenses} "${l.name}" expires ${formatDate(l.expiryDate)}`,
       link: '/licenses',
       severity: 'warning' as const,
     })),
   ]
 
+  const heroActions = dashboard.quickActions.map(({ route, label }) => ({
+    to: route,
+    label,
+    icon: ACTION_ICONS[route] ?? Clock,
+  }))
+
+  const sidebarActions = [
+    ...dashboard.quickActions.map(({ route, label }) => ({
+      to: route,
+      label,
+      icon: ACTION_ICONS[route] ?? Clock,
+    })),
+    {
+      to: '/protection',
+      label: findNavItem(config, 'protection')?.label ?? `Protect ${terminology.project}`,
+      icon: Shield,
+    },
+    {
+      to: '/clients',
+      label: `Add ${terminology.client}`,
+      icon: Plus,
+    },
+  ].filter(
+    (item, index, arr) => arr.findIndex((x) => x.to === item.to) === index,
+  )
+
   return (
     <div>
-      {/* Hero banner */}
       <div className="relative overflow-hidden rounded-2xl gradient-brand p-8 mb-8 shadow-xl shadow-brand-600/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15)_0%,transparent_60%)]" />
         <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
@@ -84,23 +129,17 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={14} className="text-brand-200" />
             <span className="text-xs font-semibold uppercase tracking-widest text-brand-200/80">
-              Command Center
+              {dashboard.badge}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             {profile.name
               ? `Good to see you, ${profile.name.split(' ')[0]}`
-              : 'Welcome to WorkVault'}
+              : `Welcome to WorkVault`}
           </h1>
-          <p className="mt-2 text-sm text-brand-100/80 max-w-lg">
-            Your contract work command center — track time, send contracts, protect your work, and get paid.
-          </p>
+          <p className="mt-2 text-sm text-brand-100/80 max-w-lg">{dashboard.subtitle}</p>
           <div className="flex flex-wrap gap-2 mt-5">
-            {[
-              { to: '/time', label: 'Start Timer', icon: Clock },
-              { to: '/contracts', label: 'New Contract', icon: FileText },
-              { to: '/invoices', label: 'Create Invoice', icon: Receipt },
-            ].map(({ to, label, icon: Icon }) => (
+            {heroActions.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
@@ -148,16 +187,16 @@ export default function Dashboard() {
           trend={`${overdueInvoices.length} overdue`}
         />
         <StatCard
-          label="Active Contracts"
+          label={`Active ${terminology.contracts}`}
           value={String(contracts.filter((c) => c.status === 'signed' || c.status === 'sent').length)}
           icon={<FileText size={20} />}
           trend={`${pendingContracts.length} pending action`}
         />
         <StatCard
-          label="Protected Works"
+          label={dashboard.statLabels.protected}
           value={String(workProtections.length)}
           icon={<Shield size={20} />}
-          trend={`${clients.length} clients`}
+          trend={`${clients.length} ${dashboard.statLabels.clients}`}
         />
       </div>
 
@@ -168,9 +207,7 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-surface-100">
             {recentActivity.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-surface-400 text-center">
-                No activity yet. Start tracking time or create a contract.
-              </p>
+              <p className="px-6 py-8 text-sm text-surface-400 text-center">{dashboard.emptyActivity}</p>
             ) : (
               recentActivity.map((item, i) => (
                 <div key={i} className="flex items-center justify-between px-6 py-3.5">
@@ -198,13 +235,7 @@ export default function Dashboard() {
               <h2 className="text-base font-semibold text-surface-900">Quick Actions</h2>
             </div>
             <div className="p-4 space-y-2">
-              {[
-                { to: '/time', label: 'Start Timer', icon: Clock },
-                { to: '/contracts', label: 'New Contract', icon: FileText },
-                { to: '/invoices', label: 'Create Invoice', icon: Receipt },
-                { to: '/protection', label: 'Protect Work', icon: Shield },
-                { to: '/clients', label: 'Add Client', icon: Plus },
-              ].map(({ to, label, icon: Icon }) => (
+              {sidebarActions.map(({ to, label, icon: Icon }) => (
                 <Link
                   key={to}
                   to={to}
@@ -217,26 +248,28 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card>
-            <div className="px-6 py-4 border-b border-surface-100">
-              <h2 className="text-base font-semibold text-surface-900">License Status</h2>
-            </div>
-            <div className="p-4 space-y-3">
-              {licenses.length === 0 ? (
-                <p className="text-sm text-surface-400 text-center py-2">No licenses tracked</p>
-              ) : (
-                licenses.slice(0, 4).map((l) => (
-                  <div key={l.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <BadgeCheck size={14} className="text-surface-400" />
-                      <span className="text-sm text-surface-700">{l.name}</span>
+          {!config.hiddenRoutes.includes('licenses') && (
+            <Card>
+              <div className="px-6 py-4 border-b border-surface-100">
+                <h2 className="text-base font-semibold text-surface-900">{terminology.licenses} Status</h2>
+              </div>
+              <div className="p-4 space-y-3">
+                {licenses.length === 0 ? (
+                  <p className="text-sm text-surface-400 text-center py-2">No licenses tracked</p>
+                ) : (
+                  licenses.slice(0, 4).map((l) => (
+                    <div key={l.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <BadgeCheck size={14} className="text-surface-400" />
+                        <span className="text-sm text-surface-700">{l.name}</span>
+                      </div>
+                      <Badge status={computeLicenseStatus(l.expiryDate)} />
                     </div>
-                    <Badge status={computeLicenseStatus(l.expiryDate)} />
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
+                  ))
+                )}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>
