@@ -9,13 +9,15 @@ import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { Client } from '../lib/types'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { getPortalUrl, publishClientPortal } from '../lib/portal'
+import { getClientAppUrl, publishClientApp } from '../lib/client-app'
 
 export default function Clients() {
-  const { state, addClient, updateClient, deleteClient, generateClientPortalToken, isIsolated } = useStore()
+  const { state, addClient, updateClient, deleteClient, generateClientPortalToken, generateClientAppToken, isIsolated } = useStore()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', address: '', notes: '' })
   const [copiedId, setCopiedId] = useState('')
+  const [copiedAppId, setCopiedAppId] = useState('')
 
   const openCreate = () => {
     setEditing(null)
@@ -44,6 +46,17 @@ export default function Clients() {
     const revenue = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0)
     const hours = state.timeEntries.filter((e) => e.clientId === clientId).reduce((s, e) => s + e.durationMinutes, 0)
     return { contracts, revenue, hours: (hours / 60).toFixed(1) }
+  }
+
+  const handleClientAppLink = async (client: Client) => {
+    const token = client.clientAppToken || generateClientAppToken(client.id)
+    const updated = { ...client, clientAppToken: token }
+    if (!client.clientAppToken) updateClient(client.id, { clientAppToken: token })
+    await publishClientApp(token, updated, state)
+    const url = getClientAppUrl(token)
+    await navigator.clipboard.writeText(url)
+    setCopiedAppId(client.id)
+    setTimeout(() => setCopiedAppId(''), 2000)
   }
 
   const handlePortalLink = async (client: Client) => {
@@ -137,18 +150,32 @@ export default function Clients() {
                 <p className="text-xs text-surface-400 mt-3">Added {formatDate(client.createdAt)}</p>
 
                 {!isIsolated && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full mt-3"
-                    onClick={() => handlePortalLink(client)}
-                  >
-                    {copiedId === client.id ? (
-                      <><Check size={14} /> Link Copied!</>
-                    ) : (
-                      <><Link2 size={14} /> Copy Client Portal Link</>
-                    )}
-                  </Button>
+                  <div className="flex flex-col gap-2 mt-3">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleClientAppLink(client)}
+                    >
+                      {copiedAppId === client.id ? (
+                        <><Check size={14} /> WorkVault Link Copied!</>
+                      ) : (
+                        <><Link2 size={14} /> Send Client WorkVault</>
+                      )}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handlePortalLink(client)}
+                    >
+                      {copiedId === client.id ? (
+                        <><Check size={14} /> Portal Link Copied</>
+                      ) : (
+                        <><Link2 size={14} /> Copy Simple Portal Link</>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </Card>
             )

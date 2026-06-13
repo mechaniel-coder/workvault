@@ -10,8 +10,9 @@ import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import { SignaturePad, SignatureDisplay } from '../components/SignaturePad'
-import { CONTRACT_TEMPLATES, type Contract, type ContractSignature } from '../lib/types'
+import { CONTRACT_TEMPLATES, type Contract, type ContractSignature, type ClientFileAccess } from '../lib/types'
 import { fillContractTemplate, formatCurrency, formatDate, getNextNumber, hasSignature } from '../lib/utils'
+import { CLIENT_FILE_ACCESS_OPTIONS, clientFileAccessLabel } from '../lib/client-file-access'
 import { generateContractPDF } from '../lib/pdf'
 import { createSigningLink, fetchSigningStatus } from '../lib/sync'
 
@@ -31,6 +32,7 @@ export default function Contracts() {
     endDate: '',
     value: '',
     terms: '',
+    clientFileAccess: 'none' as ClientFileAccess,
   })
 
   const clientOptions = [
@@ -77,11 +79,12 @@ export default function Contracts() {
       endDate: form.endDate,
       value: parseFloat(form.value) || 0,
       terms: form.terms,
+      clientFileAccess: form.clientFileAccess,
       sentAt: null,
       signedAt: null,
     })
     setShowCreate(false)
-    setForm({ title: '', clientId: '', template: 'freelance', startDate: new Date().toISOString().split('T')[0], endDate: '', value: '', terms: '' })
+    setForm({ title: '', clientId: '', template: 'freelance', startDate: new Date().toISOString().split('T')[0], endDate: '', value: '', terms: '', clientFileAccess: 'none' })
   }
 
   const handleContractorSign = (signatureImage: string) => {
@@ -190,6 +193,8 @@ export default function Contracts() {
                   </p>
                   <p className="text-xs text-surface-400 mt-1">
                     {formatDate(contract.startDate)} — {formatDate(contract.endDate)}
+                    · Files: {clientFileAccessLabel(contract.clientFileAccess ?? 'none')}
+                    {contract.status === 'signed' ? '' : ' (after signing)'}
                   </p>
                   <div className="flex gap-3 mt-2 text-xs">
                     <span className={hasSignature(contract, 'contractor') ? 'text-emerald-600' : 'text-surface-400'}>
@@ -255,6 +260,19 @@ export default function Contracts() {
             <Input label="Contract Value" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
           </div>
           <Textarea label="Additional Terms" value={form.terms} onChange={(e) => setForm({ ...form, terms: e.target.value })} placeholder="Any special terms or conditions..." />
+          <Select
+            label="Client file access (Client WorkVault)"
+            value={form.clientFileAccess}
+            onChange={(e) => setForm({ ...form, clientFileAccess: e.target.value as ClientFileAccess })}
+            options={CLIENT_FILE_ACCESS_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+            }))}
+          />
+          <p className="text-xs text-surface-500 -mt-2">
+            {CLIENT_FILE_ACCESS_OPTIONS.find((o) => o.value === form.clientFileAccess)?.description}
+            {' '}Access takes effect only after both parties have signed this contract.
+          </p>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" onClick={() => setShowCreate(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={!form.title || !form.clientId}>Create Contract</Button>

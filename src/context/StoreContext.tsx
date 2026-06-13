@@ -13,7 +13,7 @@ import { createExtendedCrud } from '../lib/store-crud'
 type StoreContextType = {
   state: AppState
   updateProfile: (profile: Partial<BusinessProfile>) => void
-  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken'>) => Client
+  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken'>) => Client
   updateClient: (id: string, data: Partial<Client>) => void
   deleteClient: (id: string) => void
   addTimeEntry: (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => TimeEntry
@@ -21,7 +21,7 @@ type StoreContextType = {
   deleteTimeEntry: (id: string) => void
   startTimer: (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'endTime' | 'durationMinutes'>) => void
   stopTimer: () => void
-  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken'>) => Contract
+  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess'> & { clientFileAccess?: Contract['clientFileAccess'] }) => Contract
   updateContract: (id: string, data: Partial<Contract>) => void
   signContract: (id: string, signature: ContractSignature) => void
   deleteContract: (id: string) => void
@@ -75,6 +75,7 @@ type StoreContextType = {
   updateMilestone: (id: string, data: Partial<Milestone>) => void
   deleteMilestone: (id: string) => void
   generateClientPortalToken: (clientId: string) => string
+  generateClientAppToken: (clientId: string) => string
   updateDemoSettings: (data: Partial<DemoSettings>) => void
   isIsolated: boolean
   isReadOnly: boolean
@@ -130,8 +131,8 @@ export function StoreProvider({
     mutate((s) => ({ ...s, profile: { ...s.profile, ...profile } }))
   }, [mutate])
 
-  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt' | 'portalToken'>) => {
-    const client: Client = { ...data, portalToken: null, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken'>) => {
+    const client: Client = { ...data, portalToken: null, clientAppToken: null, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
     mutate((s) => ({ ...s, clients: [...s.clients, client] }))
     return client
   }, [mutate])
@@ -141,6 +142,15 @@ export function StoreProvider({
     mutate((s) => ({
       ...s,
       clients: s.clients.map((c) => (c.id === clientId ? { ...c, portalToken: token } : c)),
+    }))
+    return token
+  }, [mutate])
+
+  const generateClientAppToken = useCallback((clientId: string) => {
+    const token = crypto.randomUUID()
+    mutate((s) => ({
+      ...s,
+      clients: s.clients.map((c) => (c.id === clientId ? { ...c, clientAppToken: token } : c)),
     }))
     return token
   }, [mutate])
@@ -200,10 +210,11 @@ export function StoreProvider({
     })
   }, [mutate])
 
-  const addContract = useCallback((data: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken'>) => {
+  const addContract = useCallback((data: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess'> & { clientFileAccess?: Contract['clientFileAccess'] }) => {
     const now = new Date().toISOString()
     const contract: Contract = {
       ...data,
+      clientFileAccess: data.clientFileAccess ?? 'none',
       signatures: [],
       signingToken: null,
       id: crypto.randomUUID(),
@@ -399,6 +410,7 @@ export function StoreProvider({
         updateMilestone: ext.milestones.update,
         deleteMilestone: ext.milestones.delete,
         generateClientPortalToken,
+        generateClientAppToken,
         updateDemoSettings,
         isIsolated: isolated,
         isReadOnly: readOnly,

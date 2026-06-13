@@ -59,6 +59,7 @@ export function loadState(): AppState {
         ...c,
         signatures: c.signatures || [],
         signingToken: c.signingToken ?? null,
+        clientFileAccess: c.clientFileAccess ?? 'none',
       })),
       invoices: (parsed.invoices || []).map((inv) => ({
         ...inv,
@@ -68,6 +69,7 @@ export function loadState(): AppState {
       clients: (parsed.clients || []).map((c) => ({
         ...c,
         portalToken: c.portalToken ?? null,
+        clientAppToken: c.clientAppToken ?? null,
       })),
       projects: parsed.projects || [],
       proposals: parsed.proposals || [],

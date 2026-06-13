@@ -177,7 +177,7 @@ function HubContent() {
           </Card>
         )}
 
-        {hasProjectTransferContent(transfer) && session.demoUrl && (
+        {session.clientFileAccess !== 'none' && hasProjectTransferContent(transfer) && session.demoUrl && (
           <Link to={`/demo/${session.token}/project`} className="flex items-center justify-between p-4 rounded-xl border border-surface-200 bg-white hover:bg-surface-50 transition-colors">
             <div>
               <p className="text-sm font-medium text-surface-900">{transfer.title || 'Project deliverables'}</p>
@@ -204,7 +204,7 @@ function HubContent() {
           </Card>
         )}
 
-        {transfer.appPreviewUrl && (
+        {session.clientFileAccess !== 'none' && transfer.appPreviewUrl && (
           <Card className="overflow-hidden">
             <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2 text-sm font-medium">
               <Globe size={16} className="text-brand-600" /> Live preview

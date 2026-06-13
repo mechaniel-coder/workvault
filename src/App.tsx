@@ -16,6 +16,10 @@ import SettingsPage from './pages/Settings'
 import SignContractPage from './pages/SignContract'
 import ClientPortal from './pages/ClientPortal'
 import ClientHub from './pages/ClientHub'
+import ClientAppShell from './pages/ClientAppShell'
+import ClientDashboard from './pages/ClientDashboard'
+import ClientMessages from './pages/ClientMessages'
+import ClientReview from './pages/ClientReview'
 import DemoShell from './pages/DemoShell'
 import DemoInfo from './pages/DemoInfo'
 import DemoProject from './pages/DemoProject'
@@ -57,6 +61,21 @@ const appRoutes = (
   </>
 )
 
+const clientAppRoutes = (
+  <>
+    <Route index element={<ClientDashboard />} />
+    <Route path="pipeline" element={<Pipeline />} />
+    <Route path="project" element={<DemoProject />} />
+    <Route path="review" element={<ClientReview />} />
+    <Route path="messages" element={<ClientMessages />} />
+    <Route path="proposals" element={<Proposals />} />
+    <Route path="contracts" element={<Contracts />} />
+    <Route path="invoices" element={<Invoices />} />
+    <Route path="documents" element={<Documents />} />
+    <Route path="scope" element={<ScopeLog />} />
+  </>
+)
+
 export default function App() {
   return (
     <AuthProvider>
@@ -66,6 +85,9 @@ export default function App() {
             <Route path="/sign/:token" element={<SignContractPage />} />
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/hub/:token" element={<ClientHub />} />
+            <Route path="/client/:token/*" element={<ClientAppShell />}>
+              {clientAppRoutes}
+            </Route>
             <Route path="/demo/:token/*" element={<DemoShell />}>
               {appRoutes}
               <Route path="project" element={<DemoProject />} />

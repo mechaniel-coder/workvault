@@ -3,8 +3,10 @@ import type {
   ClientMessage, ClientRoomConfig, ClientRoomData, ClientSignOff, ClientSurveyResponse,
   DemoSettings,
 } from './types'
-import { DEFAULT_CLIENT_ROOM_DATA } from './types'
+import { DEFAULT_CLIENT_ROOM_DATA, DEFAULT_DEMO_PROJECT_TRANSFER } from './types'
 import { getPaymentLink } from './payments'
+import { loadLocalClientAppSession } from './client-app'
+import { fileAccessFlags, resolveClientFileAccess } from './client-file-access'
 
 const LOCAL_DATA_PREFIX = 'workvault-client-room-data-'
 
@@ -30,43 +32,115 @@ function saveLocalData(token: string, data: ClientRoomData): void {
   localStorage.setItem(`${LOCAL_DATA_PREFIX}${token}`, JSON.stringify(data))
 }
 
-function buildSessionFromLocal(token: string, state: AppState): ClientHubSession | null {
-  const { demoSettings } = state
-  if (!demoSettings.enabled || demoSettings.token !== token) return null
+function buildHubSessionPayload(
+  token: string,
+  state: AppState,
+  opts: {
+    contractorName: string
+    clientName: string
+    label: string
+    allowDownloads: boolean
+    config: ClientRoomConfig
+    projectTransfer: DemoSettings['projectTransfer']
+    clientId?: string
+    demoUrl?: string | null
+    clientFileAccess?: import('./types').ClientFileAccess
+  }
+): ClientHubSession {
+  const clientFilter = opts.clientId
+    ? (id: string) => id === opts.clientId
+    : () => true
 
-  const client = state.clients[0]
-  const invoices = state.invoices.slice(0, 5).map((inv) => ({
-    number: inv.number,
-    title: inv.lineItems[0]?.description || 'Invoice',
-    total: inv.total,
-    status: inv.status,
-    dueDate: inv.dueDate,
-    currency: state.profile.defaultCurrency,
-    paymentLinks: state.profile.paymentMethods
-      .filter((m) => m.enabled)
-      .map((m) => ({ label: m.label, url: getPaymentLink(m) || m.details }))
-      .filter((l) => l.url),
-  }))
+  const invoices = state.invoices
+    .filter((i) => clientFilter(i.clientId))
+    .slice(0, 20)
+    .map((inv) => ({
+      number: inv.number,
+      title: inv.lineItems[0]?.description || 'Invoice',
+      total: inv.total,
+      status: inv.status,
+      dueDate: inv.dueDate,
+      currency: state.profile.defaultCurrency,
+      paymentLinks: state.profile.paymentMethods
+        .filter((m) => m.enabled)
+        .map((m) => ({ label: m.label, url: getPaymentLink(m) || m.details }))
+        .filter((l) => l.url),
+    }))
 
   return {
     token,
-    contractorName: state.profile.name || 'Your contractor',
-    clientName: client?.name || demoSettings.label,
-    label: demoSettings.label,
-    allowDownloads: demoSettings.allowDownloads,
-    config: demoSettings.clientRoom,
+    contractorName: opts.contractorName,
+    clientName: opts.clientName,
+    label: opts.label,
+    allowDownloads: opts.allowDownloads,
+    config: opts.config,
     data: loadLocalData(token),
-    projectTransfer: demoSettings.projectTransfer,
+    projectTransfer: opts.projectTransfer,
     invoices,
-    contracts: state.contracts.slice(0, 5).map((c) => ({
-      number: c.number,
-      title: c.title,
-      status: c.status,
-      value: c.value,
-      currency: state.profile.defaultCurrency,
-    })),
-    demoUrl: getDemoUrl(token),
+    contracts: state.contracts
+      .filter((c) => clientFilter(c.clientId))
+      .slice(0, 20)
+      .map((c) => ({
+        number: c.number,
+        title: c.title,
+        status: c.status,
+        value: c.value,
+        currency: state.profile.defaultCurrency,
+      })),
+    demoUrl: opts.demoUrl ?? null,
+    clientFileAccess: opts.clientFileAccess ?? 'none',
   }
+}
+
+function buildSessionFromLocal(token: string, state: AppState): ClientHubSession | null {
+  const { demoSettings } = state
+  if (demoSettings.enabled && demoSettings.token === token) {
+    const client = state.clients[0]
+    return buildHubSessionPayload(token, state, {
+      contractorName: state.profile.name || 'Your contractor',
+      clientName: client?.name || demoSettings.label,
+      label: demoSettings.label,
+      allowDownloads: demoSettings.allowDownloads,
+      config: demoSettings.clientRoom,
+      projectTransfer: demoSettings.projectTransfer,
+      demoUrl: getDemoUrl(token),
+      clientFileAccess: demoSettings.allowDownloads ? 'write' : 'read',
+    })
+  }
+
+  const appSession = loadLocalClientAppSession(token)
+  if (appSession?.enabled) {
+    return buildHubSessionPayload(token, appSession.appState, {
+      contractorName: appSession.contractorName,
+      clientName: appSession.clientName,
+      label: appSession.label,
+      allowDownloads: appSession.allowDownloads,
+      config: appSession.clientRoom,
+      projectTransfer: appSession.projectTransfer,
+      clientId: appSession.clientId,
+      demoUrl: null,
+      clientFileAccess: appSession.clientFileAccess,
+    })
+  }
+
+  const client = state.clients.find((c) => c.clientAppToken === token)
+  if (client) {
+    const fileAccess = resolveClientFileAccess(state.contracts, client.id)
+    const flags = fileAccessFlags(fileAccess)
+    return buildHubSessionPayload(token, state, {
+      contractorName: state.profile.name || 'Your contractor',
+      clientName: client.name,
+      label: state.demoSettings.projectTransfer.title || client.company || client.name,
+      allowDownloads: flags.allowDownloads,
+      config: syncClientRoomFromState(state),
+      projectTransfer: flags.canViewFiles ? state.demoSettings.projectTransfer : { ...DEFAULT_DEMO_PROJECT_TRANSFER },
+      clientId: client.id,
+      demoUrl: null,
+      clientFileAccess: fileAccess,
+    })
+  }
+
+  return null
 }
 
 export async function fetchClientHubSession(token: string): Promise<ClientHubSession | null> {
