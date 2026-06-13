@@ -2,27 +2,43 @@ import { useLocation } from 'react-router-dom'
 import { Bell, Search } from 'lucide-react'
 import { useStore } from '../../context/StoreContext'
 import { useAuth } from '../../context/AuthContext'
+import { useDemoOptional } from '../../context/DemoContext'
 import { formatDate } from '../../lib/utils'
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
   '/time': 'Time Tracker',
+  '/pipeline': 'Pipeline',
+  '/proposals': 'Proposals',
   '/contracts': 'Contracts',
   '/invoices': 'Invoices',
+  '/finance': 'Finance',
+  '/scope': 'Scope Log',
+  '/documents': 'Documents',
+  '/tools': 'Tools',
+  '/subcontractors': 'Subcontractors',
   '/protection': 'Work Protection',
   '/licenses': 'Licenses',
   '/hosting': 'Hosting',
   '/records': 'Work Records',
   '/clients': 'Clients',
   '/settings': 'Settings',
+  '/project': 'Your Project',
+  '/about': 'Preview Info',
 }
 
-export function TopBar() {
+export function TopBar({ demoMode }: { demoMode?: boolean }) {
   const location = useLocation()
   const { state } = useStore()
   const { user } = useAuth()
-  const title = PAGE_TITLES[location.pathname] || 'WorkVault'
-  const displayName = state.profile.name || user?.name || 'Contractor'
+  const demo = useDemoOptional()
+
+  const pathKey = demo?.basePath
+    ? location.pathname.replace(demo.basePath, '') || '/'
+    : location.pathname
+
+  const title = PAGE_TITLES[pathKey] || (pathKey === '/about' ? 'Preview Info' : pathKey === '/project' ? 'Your Project' : 'WorkVault')
+  const displayName = demoMode ? 'Preview Guest' : (state.profile.name || user?.name || 'Contractor')
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
@@ -54,7 +70,7 @@ export function TopBar() {
         <div className="flex items-center gap-2.5 pl-2 border-l border-surface-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-surface-800 leading-tight">{displayName}</p>
-            <p className="text-[11px] text-surface-400">{state.profile.email || user?.email || 'Local account'}</p>
+            <p className="text-[11px] text-surface-400">{demoMode ? 'Read-only preview guest' : (state.profile.email || user?.email || 'Local account')}</p>
           </div>
           <div className="flex h-9 w-9 items-center justify-center rounded-full gradient-brand text-white text-sm font-semibold shadow-md shadow-brand-600/20">
             {initial}

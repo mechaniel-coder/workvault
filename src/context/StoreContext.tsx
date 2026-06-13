@@ -1,12 +1,19 @@
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
-import type { AppState, BusinessProfile, Client, Contract, ContractSignature, HostedProject, Invoice, License, SyncMeta, TimeEntry, WorkProtection, WorkRecord } from '../lib/types'
+import { createContext, useContext, useCallback, useEffect, useState, useMemo, type ReactNode } from 'react'
+import type {
+  AppState, AvailabilityBlock, BusinessProfile, Client, Contract, ContractSignature,
+  EmailTemplate, Expense, HostedProject, IntegrationSettings, Invoice, License,
+  Milestone, Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor,
+  SyncMeta, TaxSettings, TimeEntry, VaultDocument, WorkProtection, WorkRecord,
+  DemoSettings,
+} from '../lib/types'
 import { applySignatureToContract, createInitialState, loadState, saveState } from '../lib/utils'
 import { autoSyncIfEnabled } from '../lib/sync'
+import { createExtendedCrud } from '../lib/store-crud'
 
 type StoreContextType = {
   state: AppState
   updateProfile: (profile: Partial<BusinessProfile>) => void
-  addClient: (client: Omit<Client, 'id' | 'createdAt'>) => Client
+  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken'>) => Client
   updateClient: (id: string, data: Partial<Client>) => void
   deleteClient: (id: string) => void
   addTimeEntry: (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => TimeEntry
@@ -34,43 +41,108 @@ type StoreContextType = {
   deleteWorkRecord: (id: string) => void
   importData: (state: AppState) => void
   updateSyncMeta: (meta: Partial<SyncMeta>) => void
+  updateTaxSettings: (data: Partial<TaxSettings>) => void
+  updateIntegrations: (data: Partial<IntegrationSettings>) => void
   resetAll: () => void
+  addProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project
+  updateProject: (id: string, data: Partial<Project>) => void
+  deleteProject: (id: string) => void
+  addProposal: (data: Omit<Proposal, 'id' | 'createdAt' | 'updatedAt'>) => Proposal
+  updateProposal: (id: string, data: Partial<Proposal>) => void
+  deleteProposal: (id: string) => void
+  addExpense: (data: Omit<Expense, 'id' | 'createdAt'>) => Expense
+  updateExpense: (id: string, data: Partial<Expense>) => void
+  deleteExpense: (id: string) => void
+  addRecurringInvoice: (data: Omit<RecurringInvoice, 'id' | 'createdAt'>) => RecurringInvoice
+  updateRecurringInvoice: (id: string, data: Partial<RecurringInvoice>) => void
+  deleteRecurringInvoice: (id: string) => void
+  addScopeEntry: (data: Omit<ScopeEntry, 'id' | 'createdAt'>) => ScopeEntry
+  updateScopeEntry: (id: string, data: Partial<ScopeEntry>) => void
+  deleteScopeEntry: (id: string) => void
+  addVaultDocument: (data: Omit<VaultDocument, 'id' | 'createdAt'>) => VaultDocument
+  updateVaultDocument: (id: string, data: Partial<VaultDocument>) => void
+  deleteVaultDocument: (id: string) => void
+  addSubcontractor: (data: Omit<Subcontractor, 'id' | 'createdAt'>) => Subcontractor
+  updateSubcontractor: (id: string, data: Partial<Subcontractor>) => void
+  deleteSubcontractor: (id: string) => void
+  addEmailTemplate: (data: Omit<EmailTemplate, 'id' | 'createdAt'>) => EmailTemplate
+  updateEmailTemplate: (id: string, data: Partial<EmailTemplate>) => void
+  deleteEmailTemplate: (id: string) => void
+  addAvailabilityBlock: (data: Omit<AvailabilityBlock, 'id' | 'createdAt'>) => AvailabilityBlock
+  updateAvailabilityBlock: (id: string, data: Partial<AvailabilityBlock>) => void
+  deleteAvailabilityBlock: (id: string) => void
+  addMilestone: (data: Omit<Milestone, 'id' | 'createdAt'>) => Milestone
+  updateMilestone: (id: string, data: Partial<Milestone>) => void
+  deleteMilestone: (id: string) => void
+  generateClientPortalToken: (clientId: string) => string
+  updateDemoSettings: (data: Partial<DemoSettings>) => void
+  isIsolated: boolean
+  isReadOnly: boolean
 }
 
 const StoreContext = createContext<StoreContextType | null>(null)
 
-function persist(state: AppState) {
-  saveState(state)
+function persist(state: AppState, isolated: boolean) {
+  if (!isolated) saveState(state)
   return state
 }
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => loadState())
+type StoreProviderProps = {
+  children: ReactNode
+  isolated?: boolean
+  initialState?: AppState
+  readOnly?: boolean
+  onBlockedAction?: () => void
+}
+
+export function StoreProvider({
+  children,
+  isolated = false,
+  initialState,
+  readOnly = false,
+  onBlockedAction,
+}: StoreProviderProps) {
+  const [state, setState] = useState<AppState>(() => (isolated ? (initialState ?? createInitialState()) : loadState()))
 
   useEffect(() => {
-    saveState(state)
-  }, [state])
+    if (!isolated) saveState(state)
+  }, [state, isolated])
 
   useEffect(() => {
-    if (!state.syncMeta.autoSync) return
+    if (isolated || !state.syncMeta.autoSync) return
     const timer = setTimeout(() => {
       autoSyncIfEnabled(state)
     }, 3000)
     return () => clearTimeout(timer)
-  }, [state])
+  }, [state, isolated])
 
   const mutate = useCallback((fn: (s: AppState) => AppState) => {
-    setState((prev) => persist(fn(prev)))
-  }, [])
+    if (readOnly) {
+      onBlockedAction?.()
+      return
+    }
+    setState((prev) => persist(fn(prev), isolated))
+  }, [isolated, readOnly, onBlockedAction])
+
+  const ext = useMemo(() => createExtendedCrud(mutate), [mutate])
 
   const updateProfile = useCallback((profile: Partial<BusinessProfile>) => {
     mutate((s) => ({ ...s, profile: { ...s.profile, ...profile } }))
   }, [mutate])
 
-  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt'>) => {
-    const client: Client = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt' | 'portalToken'>) => {
+    const client: Client = { ...data, portalToken: null, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
     mutate((s) => ({ ...s, clients: [...s.clients, client] }))
     return client
+  }, [mutate])
+
+  const generateClientPortalToken = useCallback((clientId: string) => {
+    const token = crypto.randomUUID()
+    mutate((s) => ({
+      ...s,
+      clients: s.clients.map((c) => (c.id === clientId ? { ...c, portalToken: token } : c)),
+    }))
+    return token
   }, [mutate])
 
   const updateClient = useCallback((id: string, data: Partial<Client>) => {
@@ -237,16 +309,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [mutate])
 
   const importData = useCallback((newState: AppState) => {
-    setState(persist(newState))
-  }, [])
+    if (isolated) {
+      onBlockedAction?.()
+      return
+    }
+    setState(persist(newState, false))
+  }, [isolated, onBlockedAction])
 
   const updateSyncMeta = useCallback((meta: Partial<SyncMeta>) => {
     mutate((s) => ({ ...s, syncMeta: { ...s.syncMeta, ...meta } }))
   }, [mutate])
 
+  const updateDemoSettings = useCallback((data: Partial<DemoSettings>) => {
+    mutate((s) => ({ ...s, demoSettings: { ...s.demoSettings, ...data } }))
+  }, [mutate])
+
   const resetAll = useCallback(() => {
-    setState(persist(createInitialState()))
-  }, [])
+    if (isolated) {
+      onBlockedAction?.()
+      return
+    }
+    setState(persist(createInitialState(), false))
+  }, [isolated, onBlockedAction])
 
   return (
     <StoreContext.Provider
@@ -281,7 +365,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         deleteWorkRecord,
         importData,
         updateSyncMeta,
+        updateTaxSettings: ext.updateTaxSettings,
+        updateIntegrations: ext.updateIntegrations,
         resetAll,
+        addProject: ext.projects.add,
+        updateProject: ext.projects.update,
+        deleteProject: ext.projects.delete,
+        addProposal: ext.proposals.add,
+        updateProposal: ext.proposals.update,
+        deleteProposal: ext.proposals.delete,
+        addExpense: ext.expenses.add,
+        updateExpense: ext.expenses.update,
+        deleteExpense: ext.expenses.delete,
+        addRecurringInvoice: ext.recurringInvoices.add,
+        updateRecurringInvoice: ext.recurringInvoices.update,
+        deleteRecurringInvoice: ext.recurringInvoices.delete,
+        addScopeEntry: ext.scopeEntries.add,
+        updateScopeEntry: ext.scopeEntries.update,
+        deleteScopeEntry: ext.scopeEntries.delete,
+        addVaultDocument: ext.vaultDocuments.add,
+        updateVaultDocument: ext.vaultDocuments.update,
+        deleteVaultDocument: ext.vaultDocuments.delete,
+        addSubcontractor: ext.subcontractors.add,
+        updateSubcontractor: ext.subcontractors.update,
+        deleteSubcontractor: ext.subcontractors.delete,
+        addEmailTemplate: ext.emailTemplates.add,
+        updateEmailTemplate: ext.emailTemplates.update,
+        deleteEmailTemplate: ext.emailTemplates.delete,
+        addAvailabilityBlock: ext.availabilityBlocks.add,
+        updateAvailabilityBlock: ext.availabilityBlocks.update,
+        deleteAvailabilityBlock: ext.availabilityBlocks.delete,
+        addMilestone: ext.milestones.add,
+        updateMilestone: ext.milestones.update,
+        deleteMilestone: ext.milestones.delete,
+        generateClientPortalToken,
+        updateDemoSettings,
+        isIsolated: isolated,
+        isReadOnly: readOnly,
       }}
     >
       {children}

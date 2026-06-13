@@ -1,7 +1,15 @@
 import type { AppState, Contract } from './types'
-import { DEFAULT_PROFILE } from './types'
+import {
+  DEFAULT_PROFILE, DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES,
+  DEFAULT_DEMO_SETTINGS, DEFAULT_DEMO_PROJECT_TRANSFER, DEFAULT_CLIENT_ROOM_CONFIG,
+} from './types'
 
 const STORAGE_KEY = 'workvault-state'
+
+function seedEmailTemplates() {
+  const now = new Date().toISOString()
+  return DEFAULT_EMAIL_TEMPLATES.map((t) => ({ ...t, id: crypto.randomUUID(), createdAt: now }))
+}
 
 export function createInitialState(): AppState {
   return {
@@ -14,8 +22,21 @@ export function createInitialState(): AppState {
     workProtections: [],
     hostedProjects: [],
     workRecords: [],
+    projects: [],
+    proposals: [],
+    expenses: [],
+    recurringInvoices: [],
+    scopeEntries: [],
+    vaultDocuments: [],
+    subcontractors: [],
+    emailTemplates: seedEmailTemplates(),
+    availabilityBlocks: [],
+    milestones: [],
+    taxSettings: { ...DEFAULT_TAX_SETTINGS },
+    integrations: { ...DEFAULT_INTEGRATIONS },
     activeTimer: null,
     syncMeta: { lastSyncedAt: null, autoSync: false },
+    demoSettings: { ...DEFAULT_DEMO_SETTINGS },
   }
 }
 
@@ -27,13 +48,53 @@ export function loadState(): AppState {
     return {
       ...createInitialState(),
       ...parsed,
-      profile: { ...DEFAULT_PROFILE, ...parsed.profile },
+      profile: {
+        ...DEFAULT_PROFILE,
+        ...parsed.profile,
+        paymentMethods: parsed.profile?.paymentMethods || [],
+        defaultPaymentInstructions: parsed.profile?.defaultPaymentInstructions || '',
+      },
       syncMeta: { ...createInitialState().syncMeta, ...parsed.syncMeta },
       contracts: (parsed.contracts || []).map((c: Contract) => ({
         ...c,
         signatures: c.signatures || [],
         signingToken: c.signingToken ?? null,
       })),
+      invoices: (parsed.invoices || []).map((inv) => ({
+        ...inv,
+        paymentMethodIds: inv.paymentMethodIds || [],
+        paymentInstructions: inv.paymentInstructions || '',
+      })),
+      clients: (parsed.clients || []).map((c) => ({
+        ...c,
+        portalToken: c.portalToken ?? null,
+      })),
+      projects: parsed.projects || [],
+      proposals: parsed.proposals || [],
+      expenses: parsed.expenses || [],
+      recurringInvoices: parsed.recurringInvoices || [],
+      scopeEntries: parsed.scopeEntries || [],
+      vaultDocuments: parsed.vaultDocuments || [],
+      subcontractors: parsed.subcontractors || [],
+      emailTemplates: parsed.emailTemplates?.length ? parsed.emailTemplates : seedEmailTemplates(),
+      availabilityBlocks: parsed.availabilityBlocks || [],
+      milestones: parsed.milestones || [],
+      taxSettings: { ...DEFAULT_TAX_SETTINGS, ...parsed.taxSettings },
+      integrations: { ...DEFAULT_INTEGRATIONS, ...parsed.integrations },
+      demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
+        uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
+        allowDownloads: parsed.demoSettings?.allowDownloads ?? false,
+        clientRoom: { ...DEFAULT_CLIENT_ROOM_CONFIG, ...parsed.demoSettings?.clientRoom,
+          checklist: parsed.demoSettings?.clientRoom?.checklist || [],
+          milestones: parsed.demoSettings?.clientRoom?.milestones || [],
+          availabilitySlots: parsed.demoSettings?.clientRoom?.availabilitySlots || [],
+        },
+        projectTransfer: {
+          ...DEFAULT_DEMO_PROJECT_TRANSFER,
+          ...parsed.demoSettings?.projectTransfer,
+          deliverables: parsed.demoSettings?.projectTransfer?.deliverables || [],
+        },
+      },
     }
   } catch {
     return createInitialState()
