@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash2, CheckCircle2, Repeat2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, Repeat2, FileText, DollarSign } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -9,6 +10,7 @@ import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import { formatCurrency } from '../lib/utils'
+import { getSubcontractorPaymentsForYear, maskTin } from '../lib/tax-1099'
 
 const emptyForm = {
   name: '',
@@ -19,12 +21,33 @@ const emptyForm = {
   projectId: '',
   amountOwed: '',
   notes: '',
+  businessName: '',
+  tin: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: '',
+  entityType: 'individual' as const,
+  requires1099: true,
 }
 
+const entityOptions = [
+  { value: 'individual', label: 'Individual / Sole prop' },
+  { value: 'llc', label: 'LLC' },
+  { value: 'corp', label: 'Corporation' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'other', label: 'Other' },
+]
+
 export default function Subcontractors() {
-  const { state, addSubcontractor, updateSubcontractor, deleteSubcontractor } = useStore()
+  const {
+    state, addSubcontractor, updateSubcontractor, deleteSubcontractor, addSubcontractorPayment,
+  } = useStore()
   const [showModal, setShowModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState<string | null>(null)
+  const [paymentAmount, setPaymentAmount] = useState('')
   const [form, setForm] = useState(emptyForm)
+  const taxYear = state.tax1099Settings.filingYear
 
   const projectOptions = [
     { value: '', label: 'No project' },
@@ -64,6 +87,16 @@ export default function Subcontractors() {
       amountPaid: 0,
       clientPaidUs: false,
       notes: form.notes,
+      businessName: form.businessName || form.name,
+      tin: form.tin,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      zip: form.zip,
+      entityType: form.entityType,
+      w9OnFile: false,
+      w9ReceivedAt: null,
+      requires1099: form.requires1099,
     })
     setShowModal(false)
     setForm(emptyForm)
@@ -73,8 +106,37 @@ export default function Subcontractors() {
     updateSubcontractor(id, { clientPaidUs: !current })
   }
 
-  const markPaid = (id: string, amountOwed: number) => {
+  const markPaid = (id: string, amountOwed: number, name: string) => {
+    const balance = Math.max(amountOwed - (state.subcontractors.find((s) => s.id === id)?.amountPaid || 0), 0)
+    if (balance <= 0) return
+    addSubcontractorPayment({
+      subcontractorId: id,
+      subcontractorName: name,
+      amount: balance,
+      date: new Date().toISOString().split('T')[0],
+      method: 'manual',
+      notes: 'Marked paid from subcontractors',
+    })
     updateSubcontractor(id, { amountPaid: amountOwed })
+  }
+
+  const logPayment = () => {
+    if (!showPaymentModal) return
+    const sub = state.subcontractors.find((s) => s.id === showPaymentModal)
+    if (!sub) return
+    const amount = parseFloat(paymentAmount) || 0
+    if (amount <= 0) return
+    addSubcontractorPayment({
+      subcontractorId: sub.id,
+      subcontractorName: sub.name,
+      amount,
+      date: new Date().toISOString().split('T')[0],
+      method: 'manual',
+      notes: '',
+    })
+    updateSubcontractor(sub.id, { amountPaid: sub.amountPaid + amount })
+    setShowPaymentModal(null)
+    setPaymentAmount('')
   }
 
   return (
@@ -83,9 +145,14 @@ export default function Subcontractors() {
         title="Subcontractors"
         description="Track what you owe, what has been paid, and which jobs are client-funded."
         action={
-          <Button onClick={openCreate}>
-            <Plus size={16} /> Add Subcontractor
-          </Button>
+          <div className="flex gap-2">
+            <Link to="/tax-1099">
+              <Button variant="secondary"><FileText size={16} /> 1099 Filing</Button>
+            </Link>
+            <Button onClick={openCreate}>
+              <Plus size={16} /> Add Subcontractor
+            </Button>
+          </div>
         }
       />
 
@@ -129,6 +196,11 @@ export default function Subcontractors() {
                       <Badge status={subcontractor.clientPaidUs ? 'sent' : 'draft'}>
                         {subcontractor.clientPaidUs ? 'Client paid us' : 'Waiting on client'}
                       </Badge>
+                      {subcontractor.w9OnFile ? (
+                        <Badge status="signed">W-9 on file</Badge>
+                      ) : (
+                        <Badge status="draft">W-9 needed</Badge>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-surface-500">
                       {subcontractor.trade} · {subcontractor.projectName || 'No project'}
@@ -136,7 +208,7 @@ export default function Subcontractors() {
                     <p className="mt-2 text-sm text-surface-600">
                       {subcontractor.email || 'No email'} · {subcontractor.phone || 'No phone'}
                     </p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3 text-sm">
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm">
                       <div className="rounded-lg bg-surface-50 px-3 py-2">
                         <p className="text-xs uppercase tracking-wide text-surface-400">Rate</p>
                         <p className="font-medium text-surface-800">{formatCurrency(subcontractor.rate, state.profile.defaultCurrency)}</p>
@@ -151,7 +223,16 @@ export default function Subcontractors() {
                           {formatCurrency(subcontractor.amountPaid, state.profile.defaultCurrency)} / {formatCurrency(balance, state.profile.defaultCurrency)}
                         </p>
                       </div>
+                      <div className="rounded-lg bg-surface-50 px-3 py-2">
+                        <p className="text-xs uppercase tracking-wide text-surface-400">{taxYear} paid (1099)</p>
+                        <p className="font-medium text-surface-800">
+                          {formatCurrency(getSubcontractorPaymentsForYear(state, subcontractor.id, taxYear), state.profile.defaultCurrency)}
+                        </p>
+                      </div>
                     </div>
+                    {subcontractor.tin && (
+                      <p className="mt-2 text-xs text-surface-400 font-mono">TIN: {maskTin(subcontractor.tin)}</p>
+                    )}
                     {subcontractor.notes && <p className="mt-3 text-sm leading-6 text-surface-600">{subcontractor.notes}</p>}
                   </div>
 
@@ -165,8 +246,15 @@ export default function Subcontractors() {
                         <Repeat2 size={14} /> Toggle Client Paid
                       </Button>
                       <Button
+                        variant="ghost"
                         size="sm"
-                        onClick={() => markPaid(subcontractor.id, subcontractor.amountOwed)}
+                        onClick={() => { setShowPaymentModal(subcontractor.id); setPaymentAmount('') }}
+                      >
+                        <DollarSign size={14} /> Log payment
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => markPaid(subcontractor.id, subcontractor.amountOwed, subcontractor.name)}
                         disabled={subcontractor.amountPaid >= subcontractor.amountOwed}
                       >
                         <CheckCircle2 size={14} /> Mark Paid
@@ -202,10 +290,37 @@ export default function Subcontractors() {
             <Input label="Rate" type="number" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} />
             <Input label="Amount Owed" type="number" value={form.amountOwed} onChange={(e) => setForm({ ...form, amountOwed: e.target.value })} />
           </div>
+          <p className="text-xs font-semibold text-surface-600 pt-2 border-t border-surface-100">1099 / W-9 info</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Business name (if different)" value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} />
+            <Input label="TIN (SSN or EIN)" value={form.tin} onChange={(e) => setForm({ ...form, tin: e.target.value })} placeholder="XX-XXXXXXX" />
+          </div>
+          <Input label="Street address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Input label="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <Input label="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+            <Input label="ZIP" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} />
+          </div>
+          <Select label="Entity type" options={entityOptions} value={form.entityType} onChange={(e) => setForm({ ...form, entityType: e.target.value as typeof form.entityType })} />
+          <label className="flex items-center gap-2 text-sm text-surface-700">
+            <input type="checkbox" checked={form.requires1099} onChange={(e) => setForm({ ...form, requires1099: e.target.checked })} className="rounded border-surface-300 text-brand-600" />
+            Requires 1099-NEC if over threshold
+          </label>
           <Textarea label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Scope notes, payment terms, or contacts..." />
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={!form.name}>Save Subcontractor</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!showPaymentModal} onClose={() => setShowPaymentModal(null)} title="Log subcontractor payment">
+        <div className="space-y-4">
+          <Input label="Amount" type="number" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
+          <p className="text-xs text-surface-500">Logged payments count toward 1099-NEC totals for the tax year.</p>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowPaymentModal(null)}>Cancel</Button>
+            <Button onClick={logPayment} disabled={!paymentAmount}>Save payment</Button>
           </div>
         </div>
       </Modal>

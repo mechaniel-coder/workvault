@@ -1,7 +1,7 @@
 import type { AppState } from './types'
 import {
   DEFAULT_DEMO_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_TAX_SETTINGS,
-  DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG,
+  DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_TAX1099_SETTINGS,
 } from './types'
 import { createInitialState } from './utils'
 import { syncClientRoomFromState } from './client-room'
@@ -65,6 +65,9 @@ export function buildClientAppState(clientId: string, state: AppState): AppState
     expenses: [],
     recurringInvoices: [],
     subcontractors: [],
+    subcontractorPayments: [],
+    form1099Records: [],
+    tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },
     availabilityBlocks: state.availabilityBlocks.filter((b) => b.available),
     emailTemplates: seedEmailTemplates(),
     taxSettings: { ...DEFAULT_TAX_SETTINGS },
@@ -116,6 +119,7 @@ export function buildClientAppSession(
     clientFileAccess: fileAccess,
     projectTransfer: { ...transfer },
     clientRoom: appState.demoSettings.clientRoom,
+    guestInvites: state.clientGuestInvites.filter((i) => i.clientId === clientId && i.enabled),
     publishedAt: new Date().toISOString(),
     appState,
   }

@@ -1,7 +1,7 @@
 import { Shield, X, Users } from 'lucide-react'
 import { useClientApp } from '../context/ClientAppContext'
 
-export function ClientAppBanner() {
+export function ClientAppBanner({ guestLabel }: { guestLabel?: string }) {
   const app = useClientApp()
 
   return (
@@ -13,16 +13,18 @@ export function ClientAppBanner() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-brand-900">
-              {app.label} — with {app.contractorName}
+              {guestLabel || app.label} — {app.isGuest ? `guest access · ${app.contractorName}` : `with ${app.contractorName}`}
             </p>
             <p className="text-xs text-brand-800/80 leading-relaxed">
               <Shield size={11} className="inline mr-1 -mt-px" />
-              Your private project workspace · View contracts, invoices, and deliverables
+              {app.isGuest
+                ? `Third-party invitation · ${app.guestRole} access · read-only`
+                : 'Your private project workspace · View contracts, invoices, and deliverables'}
             </p>
           </div>
         </div>
         <p className="text-[10px] font-medium uppercase tracking-wider text-brand-700/70 shrink-0">
-          Client WorkVault
+          {app.isGuest ? 'Guest Access' : 'Client WorkVault'}
         </p>
       </div>
 

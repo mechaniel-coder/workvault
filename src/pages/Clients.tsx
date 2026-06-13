@@ -10,6 +10,7 @@ import type { Client } from '../lib/types'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { getPortalUrl, publishClientPortal } from '../lib/portal'
 import { getClientAppUrl, publishClientApp } from '../lib/client-app'
+import { ClientGuestInvitesPanel } from '../components/ClientGuestInvitesPanel'
 
 export default function Clients() {
   const { state, addClient, updateClient, deleteClient, generateClientPortalToken, generateClientAppToken, isIsolated } = useStore()
@@ -177,6 +178,8 @@ export default function Clients() {
                     </Button>
                   </div>
                 )}
+
+                {!isIsolated && <ClientGuestInvitesPanel client={client} />}
               </Card>
             )
           })}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Calculator, CalendarDays, Mail, Plus, PencilLine, Trash2 } from 'lucide-react'
+import { Calculator, CalendarDays, Mail, Plus, PencilLine, Trash2, RefreshCw, Download, Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -11,6 +12,7 @@ import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import { calculateRate } from '../lib/tax'
 import { fillTemplate } from '../lib/reports'
 import { formatCurrency } from '../lib/utils'
+import { syncGoogleCalendar, downloadIcsFeed } from '../lib/integrations-api'
 import type { AvailabilityBlock, EmailTemplate, EmailTemplateType } from '../lib/types'
 
 const tabs = [
@@ -71,8 +73,10 @@ function getWeekdayLabel(date: string) {
 }
 
 export default function Tools() {
-  const { state, addAvailabilityBlock, deleteAvailabilityBlock, updateEmailTemplate, addEmailTemplate, deleteEmailTemplate } = useStore()
+  const { state, addAvailabilityBlock, deleteAvailabilityBlock, updateEmailTemplate, addEmailTemplate, deleteEmailTemplate, updateCalendarSyncMeta } = useStore()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]['id']>('rate')
+  const [calendarSyncing, setCalendarSyncing] = useState(false)
+  const [calendarStatus, setCalendarStatus] = useState('')
 
   const [rateForm, setRateForm] = useState({
     desiredIncome: String(state.profile.defaultHourlyRate * 1800),
@@ -127,6 +131,24 @@ export default function Tools() {
     addAvailabilityBlock(availabilityForm)
     setAvailabilityForm(emptyAvailabilityForm)
     setShowAvailabilityModal(false)
+  }
+
+  const handleCalendarSync = async () => {
+    if (!state.integrationCredentials.googleRefreshToken) {
+      setCalendarStatus('Connect Google Calendar in Integrations first.')
+      return
+    }
+    setCalendarSyncing(true)
+    setCalendarStatus('')
+    try {
+      const result = await syncGoogleCalendar(state, state.integrationCredentials, state.calendarSyncMeta.eventMap)
+      updateCalendarSyncMeta({ eventMap: result.eventMap, lastSyncedAt: result.syncedAt })
+      setCalendarStatus(`Synced ${result.synced} events to Google Calendar.`)
+    } catch (e) {
+      setCalendarStatus(e instanceof Error ? e.message : 'Sync failed')
+    } finally {
+      setCalendarSyncing(false)
+    }
   }
 
   const openNewTemplate = () => {
@@ -249,11 +271,38 @@ export default function Tools() {
 
       {activeTab === 'availability' && (
         <div className="space-y-5">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              {state.integrations.googleCalendarSync && (
+                <>
+                  <Button variant="secondary" size="sm" onClick={handleCalendarSync} disabled={calendarSyncing}>
+                    {calendarSyncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    Sync to Google Calendar
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => downloadIcsFeed(state)}>
+                    <Download size={14} /> Export .ics
+                  </Button>
+                </>
+              )}
+              {!state.integrations.googleCalendarSync && (
+                <Link to="/integrations">
+                  <Button variant="secondary" size="sm">Set up Calendar sync</Button>
+                </Link>
+              )}
+            </div>
             <Button onClick={openAvailability}>
               <Plus size={16} /> Add Block
             </Button>
           </div>
+
+          {calendarStatus && (
+            <p className="text-sm text-brand-700 bg-brand-50 border border-brand-100 rounded-lg px-4 py-2">{calendarStatus}</p>
+          )}
+          {state.calendarSyncMeta.lastSyncedAt && (
+            <p className="text-xs text-surface-400">
+              Last calendar sync: {new Date(state.calendarSyncMeta.lastSyncedAt).toLocaleString()}
+            </p>
+          )}
 
           {groupedAvailability.length === 0 ? (
             <Card>

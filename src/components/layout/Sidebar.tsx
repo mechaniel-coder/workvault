@@ -20,6 +20,10 @@ import {
   HardHat,
   Info,
   Package,
+  Plug,
+  FileSpreadsheet,
+  UserCircle2,
+  Terminal,
 } from 'lucide-react'
 import { useDemoOptional } from '../../context/DemoContext'
 
@@ -39,6 +43,7 @@ const navSections = [
       { to: '/contracts', icon: FileText, label: 'Contracts' },
       { to: '/invoices', icon: Receipt, label: 'Invoices' },
       { to: '/finance', icon: Wallet, label: 'Finance' },
+      { to: '/tax-1099', icon: FileSpreadsheet, label: '1099 Filing' },
       { to: '/clients', icon: Users, label: 'Clients' },
     ],
   },
@@ -63,6 +68,9 @@ const navSections = [
   {
     label: 'Account',
     items: [
+      { to: '/team', icon: UserCircle2, label: 'Team' },
+      { to: '/integrations', icon: Plug, label: 'Integrations' },
+      { to: '/cursor-cli', icon: Terminal, label: 'Cursor CLI' },
       { to: '/settings', icon: Settings, label: 'Settings' },
     ],
   },

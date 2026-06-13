@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import type { ClientRoomConfig, DemoProjectTransfer, ClientFileAccess } from '../lib/types'
+import type { ClientRoomConfig, DemoProjectTransfer, ClientFileAccess, ClientGuestRole } from '../lib/types'
+import { guestAllowedPaths } from '../lib/guest-invites'
 
 export type ClientAppContextValue = {
   token: string
@@ -15,6 +16,10 @@ export type ClientAppContextValue = {
   canViewFiles: boolean
   clientRoom: ClientRoomConfig
   isClientSession: true
+  isGuest: boolean
+  guestName: string | null
+  guestRole: ClientGuestRole | null
+  allowedPaths: string[]
   isReadOnly: boolean
   blockedMessage: string | null
   notifyBlocked: () => void
@@ -34,6 +39,7 @@ type ClientAppProviderProps = {
   allowDownloads: boolean
   clientFileAccess: ClientFileAccess
   clientRoom: ClientRoomConfig
+  guest?: { name: string; role: ClientGuestRole; inviteId: string }
   children: ReactNode
 }
 
@@ -48,6 +54,7 @@ export function ClientAppProvider({
   allowDownloads,
   clientFileAccess,
   clientRoom,
+  guest,
   children,
 }: ClientAppProviderProps) {
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null)
@@ -67,13 +74,17 @@ export function ClientAppProvider({
         contractorName,
         contractorEmail,
         label,
-        basePath: `/client/${token}`,
+        basePath: guest ? `/guest/${token}` : `/client/${token}`,
         projectTransfer,
         allowDownloads,
         clientFileAccess,
         canViewFiles: clientFileAccess !== 'none',
         clientRoom,
         isClientSession: true,
+        isGuest: Boolean(guest),
+        guestName: guest?.name ?? null,
+        guestRole: guest?.role ?? null,
+        allowedPaths: guest ? guestAllowedPaths(guest.role) : [],
         isReadOnly: true,
         blockedMessage,
         notifyBlocked,

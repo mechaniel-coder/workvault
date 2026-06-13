@@ -17,6 +17,11 @@ import SignContractPage from './pages/SignContract'
 import ClientPortal from './pages/ClientPortal'
 import ClientHub from './pages/ClientHub'
 import ClientAppShell from './pages/ClientAppShell'
+import GuestAppShell from './pages/GuestAppShell'
+import Team from './pages/Team'
+import TeamJoin from './pages/TeamJoin'
+import Integrations from './pages/Integrations'
+import CursorCli from './pages/CursorCli'
 import ClientDashboard from './pages/ClientDashboard'
 import ClientMessages from './pages/ClientMessages'
 import ClientReview from './pages/ClientReview'
@@ -30,6 +35,7 @@ import ScopeLog from './pages/ScopeLog'
 import Documents from './pages/Documents'
 import Tools from './pages/Tools'
 import Subcontractors from './pages/Subcontractors'
+import Tax1099 from './pages/Tax1099'
 
 function ProtectedApp() {
   return (
@@ -52,11 +58,15 @@ const appRoutes = (
     <Route path="documents" element={<Documents />} />
     <Route path="tools" element={<Tools />} />
     <Route path="subcontractors" element={<Subcontractors />} />
+    <Route path="tax-1099" element={<Tax1099 />} />
     <Route path="protection" element={<WorkProtection />} />
     <Route path="licenses" element={<Licenses />} />
     <Route path="hosting" element={<Hosting />} />
     <Route path="records" element={<WorkRecords />} />
     <Route path="clients" element={<Clients />} />
+    <Route path="team" element={<Team />} />
+    <Route path="cursor-cli" element={<CursorCli />} />
+    <Route path="integrations" element={<Integrations />} />
     <Route path="settings" element={<SettingsPage />} />
   </>
 )
@@ -88,6 +98,10 @@ export default function App() {
             <Route path="/client/:token/*" element={<ClientAppShell />}>
               {clientAppRoutes}
             </Route>
+            <Route path="/guest/:inviteToken/*" element={<GuestAppShell />}>
+              {clientAppRoutes}
+            </Route>
+            <Route path="/team/join/:token" element={<TeamJoin />} />
             <Route path="/demo/:token/*" element={<DemoShell />}>
               {appRoutes}
               <Route path="project" element={<DemoProject />} />

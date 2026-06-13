@@ -259,6 +259,8 @@ export default function FinancePage() {
       paymentInstructions: '',
       sentAt: null,
       paidAt: null,
+      stripeCheckoutUrl: null,
+      stripeSessionId: null,
     })
 
     updateRecurringInvoice(recurring.id, { lastGenerated: now })
@@ -391,6 +393,15 @@ export default function FinancePage() {
 
       {activeTab === 'tax' && (
         <div className="space-y-6">
+          <Card className="p-4 border-brand-100 bg-brand-50/40 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-surface-900">1099-NEC filing for subcontractors</p>
+              <p className="text-xs text-surface-500 mt-0.5">Track W-9s, payments, and export to Track1099, Tax1099, or QuickBooks.</p>
+            </div>
+            <a href="/tax-1099">
+              <Button variant="secondary" size="sm">Open 1099 Hub</Button>
+            </a>
+          </Card>
           <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
             <Card className="p-5">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">

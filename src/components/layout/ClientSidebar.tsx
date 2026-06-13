@@ -46,6 +46,11 @@ export function ClientSidebar() {
     ...section,
     items: section.items.filter((item) => {
       if (item.to === '/project' && !app.canViewFiles) return false
+      if (item.to === '/invoices') return !app.isGuest
+      if (app.isGuest && app.guestRole) {
+        const allowed = app.allowedPaths
+        if (!allowed.includes(item.to)) return false
+      }
       return true
     }),
   })).filter((section) => section.items.length > 0)
@@ -72,8 +77,12 @@ export function ClientSidebar() {
       </div>
 
       <div className="px-5 pb-3">
-        <p className="text-xs font-medium text-surface-900 truncate">{app.clientName}</p>
-        <p className="text-[11px] text-surface-500 truncate">with {app.contractorName}</p>
+        <p className="text-xs font-medium text-surface-900 truncate">
+          {app.isGuest ? app.guestName : app.clientName}
+        </p>
+        <p className="text-[11px] text-surface-500 truncate">
+          {app.isGuest ? `Guest · ${app.guestRole} · ${app.contractorName}` : `with ${app.contractorName}`}
+        </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-5">

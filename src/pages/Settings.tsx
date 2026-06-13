@@ -13,7 +13,7 @@ import { ClientRoomSettings } from '../components/ClientRoomSettings'
 import { DemoProjectDropzone } from '../components/DemoProjectDropzone'
 
 export default function SettingsPage() {
-  const { state, updateProfile, updateIntegrations, importData, resetAll } = useStore()
+  const { state, updateProfile, importData, resetAll } = useStore()
   const fileRef = useRef<HTMLInputElement>(null)
   const { profile } = state
 
@@ -120,34 +120,31 @@ export default function SettingsPage() {
 
         <PaymentMethodsSettings />
 
-        <Card>
-          <div className="px-6 py-4 border-b border-surface-100">
-            <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
-              <Plug size={16} /> Integrations
-            </h2>
-            <p className="text-xs text-surface-400 mt-1">Enable export formats and third-party features</p>
+        <Card className="lg:col-span-2">
+          <div className="px-6 py-4 border-b border-surface-100 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
+                <Plug size={16} /> Integrations
+              </h2>
+              <p className="text-xs text-surface-400 mt-1">Stripe, email, calendar, and export formats</p>
+            </div>
+            <a href="/integrations">
+              <Button variant="secondary" size="sm">Manage Integrations</Button>
+            </a>
           </div>
-          <div className="p-6 space-y-3">
-            {([
-              ['quickbooksExport', 'QuickBooks CSV export', 'Export invoices and expenses in QuickBooks format from Finance → Reports'],
-              ['xeroExport', 'Xero export format', 'Compatible CSV layout for Xero import'],
-              ['stripeLivePayments', 'Stripe live payment links', 'Use live Stripe URLs on invoices (configure in Payment Methods)'],
-              ['wiseMultiCurrency', 'Wise multi-currency', 'Show multi-currency payment options for international clients'],
-              ['googleCalendarSync', 'Google Calendar sync', 'Sync availability blocks to Google Calendar (coming soon)'],
-            ] as const).map(([key, label, desc]) => (
-              <label key={key} className="flex items-start gap-3 p-3 rounded-xl border border-surface-100 hover:bg-surface-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={state.integrations[key]}
-                  onChange={(e) => updateIntegrations({ [key]: e.target.checked })}
-                  className="mt-1 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
-                />
-                <div>
-                  <p className="text-sm font-medium text-surface-900">{label}</p>
-                  <p className="text-xs text-surface-400 mt-0.5">{desc}</p>
-                </div>
-              </label>
-            ))}
+          <div className="p-6 grid gap-3 sm:grid-cols-3 text-sm">
+            <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
+              <p className="font-medium text-surface-800">Stripe</p>
+              <p className="text-xs text-surface-500 mt-1">{state.integrations.stripeLivePayments ? 'Live checkout enabled' : 'Off'}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
+              <p className="font-medium text-surface-800">Email</p>
+              <p className="text-xs text-surface-500 mt-1">{state.integrations.emailSendEnabled ? 'Resend configured' : 'mailto fallback'}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
+              <p className="font-medium text-surface-800">1099 Filing</p>
+              <p className="text-xs text-surface-500 mt-1">{state.tax1099Settings.enabled ? 'Tracking enabled' : 'Not enabled'}</p>
+            </div>
           </div>
         </Card>
 
