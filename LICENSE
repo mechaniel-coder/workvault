@@ -37,9 +37,8 @@ OBTAINING A LICENSE
 Commercial use, redistribution, white-labeling, SaaS hosting of the codebase,
 or any use beyond official release builds requires a separate written license.
 
-To request a license, open an issue at:
-  https://github.com/mechaniel-coder/workvault/issues
-with the subject "License inquiry" and describe your intended use.
+To request a license, use the license inquiry form:
+  https://github.com/mechaniel-coder/workvault/issues/new?template=license_inquiry.yml
 
 THIRD-PARTY COMPONENTS
 ----------------------

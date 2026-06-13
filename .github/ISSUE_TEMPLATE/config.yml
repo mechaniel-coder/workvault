@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: License terms (read first)
+    url: https://github.com/mechaniel-coder/workvault/blob/main/LICENSE
+    about: Full proprietary license — what is allowed without permission
+  - name: Download the app (no license needed)
+    url: https://github.com/mechaniel-coder/workvault/releases/latest
+    about: Official desktop installers — free to use under release terms

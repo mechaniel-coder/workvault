@@ -264,4 +264,4 @@ from the copyright holder.**
 
 Full terms: [LICENSE](LICENSE)
 
-**License inquiries:** [Open an issue](https://github.com/mechaniel-coder/workvault/issues/new?labels=license&title=License%20inquiry) describing your intended use.
+**License inquiries:** [Request a license](https://github.com/mechaniel-coder/workvault/issues/new?template=license_inquiry.yml)

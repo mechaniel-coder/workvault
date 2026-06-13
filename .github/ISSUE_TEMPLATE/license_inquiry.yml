@@ -1,0 +1,94 @@
+name: License inquiry
+description: Request permission to clone, modify, redistribute, or commercially use WorkVault source code
+title: "License inquiry: "
+labels:
+  - license
+body:
+  - type: markdown
+    value: |
+      WorkVault source code is **not open source**. Cloning, forking, modifying, or redistributing the codebase requires a **written license** from the copyright holder.
+
+      See [LICENSE](https://github.com/mechaniel-coder/workvault/blob/main/LICENSE) for full terms.
+
+      **Allowed without a license:** downloading and using official [Release builds](https://github.com/mechaniel-coder/workvault/releases) and the hosted web app.
+
+  - type: input
+    id: contact_name
+    attributes:
+      label: Your name
+      description: Individual or primary contact name
+      placeholder: Jane Smith
+    validations:
+      required: true
+
+  - type: input
+    id: contact_email
+    attributes:
+      label: Contact email
+      description: Where we can reach you about this request
+      placeholder: you@company.com
+    validations:
+      required: true
+
+  - type: input
+    id: organization
+    attributes:
+      label: Company or organization
+      description: Leave blank if this is a personal request
+      placeholder: Acme Consulting LLC
+
+  - type: dropdown
+    id: license_type
+    attributes:
+      label: What kind of license do you need?
+      description: Select the closest match; add detail below if needed
+      options:
+        - Commercial / paid product or SaaS
+        - White-label or rebrand for clients
+        - Internal use only (modify source in-house)
+        - Redistribution (bundle with other software)
+        - Fork for a derivative product
+        - Academic or research use
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: intended_use
+    attributes:
+      label: Describe your intended use
+      description: What you want to do with the source code, who will use it, and how it will be distributed (if at all)
+      placeholder: |
+        Example: We want to white-label WorkVault for 50 construction clients under our brand, hosted on our infrastructure. We would not publish the source publicly.
+    validations:
+      required: true
+
+  - type: input
+    id: users_or_seats
+    attributes:
+      label: Expected users or seats
+      description: Approximate number of end users, customers, or deployments
+      placeholder: e.g. 10 internal users, or 200 client accounts
+
+  - type: input
+    id: timeline
+    attributes:
+      label: Timeline
+      description: When do you need a response or license in place?
+      placeholder: e.g. Q3 2026, or flexible
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else we should know
+      description: Budget range, integration needs, regions, support expectations, etc.
+      placeholder: Optional
+
+  - type: checkboxes
+    id: acknowledgment
+    attributes:
+      label: Acknowledgment
+      description: Required to submit
+      options:
+        - label: I have read the [LICENSE](https://github.com/mechaniel-coder/workvault/blob/main/LICENSE) and understand that no rights are granted until a written license agreement is signed.
+          required: true
