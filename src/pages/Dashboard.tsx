@@ -9,11 +9,11 @@ import {
   AlertTriangle,
   ArrowRight,
   Plus,
+  Sparkles,
 } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Card, StatCard } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { PageHeader } from '../components/ui/Modal'
 import { formatCurrency, formatDate, formatDuration, computeLicenseStatus, computeInvoiceStatus } from '../lib/utils'
 
 export default function Dashboard() {
@@ -75,10 +75,44 @@ export default function Dashboard() {
 
   return (
     <div>
-      <PageHeader
-        title={`Welcome${profile.name ? `, ${profile.name.split(' ')[0]}` : ''}`}
-        description="Your contract work command center — everything in one place."
-      />
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl gradient-brand p-8 mb-8 shadow-xl shadow-brand-600/20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15)_0%,transparent_60%)]" />
+        <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
+        <div className="absolute -left-4 -bottom-4 h-32 w-32 rounded-full bg-white/5 blur-xl" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={14} className="text-brand-200" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-brand-200/80">
+              Command Center
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            {profile.name
+              ? `Good to see you, ${profile.name.split(' ')[0]}`
+              : 'Welcome to WorkVault'}
+          </h1>
+          <p className="mt-2 text-sm text-brand-100/80 max-w-lg">
+            Your contract work command center — track time, send contracts, protect your work, and get paid.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-5">
+            {[
+              { to: '/time', label: 'Start Timer', icon: Clock },
+              { to: '/contracts', label: 'New Contract', icon: FileText },
+              { to: '/invoices', label: 'Create Invoice', icon: Receipt },
+            ].map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+              >
+                <Icon size={15} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {alerts.length > 0 && (
         <div className="mb-6 space-y-2">

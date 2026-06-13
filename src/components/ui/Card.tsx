@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-surface-200 bg-white shadow-sm ${className}`}>
+    <div className={`rounded-xl border border-surface-200/80 bg-white shadow-sm hover:shadow-sm transition-shadow duration-300 ${className}`}>
       {children}
     </div>
   )
@@ -30,14 +30,16 @@ export function StatCard({
   className?: string
 }) {
   return (
-    <Card className={`p-5 ${className}`}>
+    <Card className={`p-5 hover:shadow-md hover:border-brand-100 transition-all duration-300 group ${className}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-surface-500">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-surface-900">{value}</p>
-          {trend && <p className="mt-1 text-xs text-surface-400">{trend}</p>}
+          <p className="mt-1 text-2xl font-bold text-surface-900 tracking-tight">{value}</p>
+          {trend && <p className="mt-1.5 text-xs text-surface-400">{trend}</p>}
         </div>
-        <div className="rounded-lg bg-brand-50 p-2.5 text-brand-600">{icon}</div>
+        <div className="rounded-xl bg-brand-50 p-2.5 text-brand-600 group-hover:bg-brand-100 group-hover:scale-105 transition-all duration-300">
+          {icon}
+        </div>
       </div>
     </Card>
   )
