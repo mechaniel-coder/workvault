@@ -120,7 +120,26 @@ function ProjectFilePreview({
 export default function DemoProject() {
   const demo = useDemo()
   const transfer = demo.projectTransfer
-  const { allowDownloads } = demo
+  const fileAccess = demo.clientFileAccess ?? (demo.allowDownloads ? 'write' : 'read')
+  const allowDownloads = fileAccess === 'write'
+
+  if (fileAccess === 'none') {
+    return (
+      <div>
+        <PageHeader
+          title="Your Project"
+          description="Project files shared by your contractor."
+        />
+        <Card>
+          <EmptyState
+            icon={<Lock size={24} />}
+            title="File access not granted"
+            description="Project files are only available when your contract is fully signed and includes file access. Contact your contractor if you believe this is an error."
+          />
+        </Card>
+      </div>
+    )
+  }
 
   if (!hasProjectTransferContent(transfer)) {
     return (
@@ -157,13 +176,11 @@ export default function DemoProject() {
           <p className={`text-xs leading-relaxed ${allowDownloads ? 'text-brand-900' : 'text-amber-900'}`}>
             {allowDownloads ? (
               <>
-                <strong>Downloads enabled.</strong> Your contractor has allowed you to download project files
-                and exports for this session.
+                <strong>Read & write access.</strong> Per your signed contract, you can preview, download, and upload project files.
               </>
             ) : (
               <>
-                <strong>View-only review.</strong> You can explore previews here but cannot download files or export data.
-                This protects the contractor&apos;s intellectual property during your review.
+                <strong>Read-only access.</strong> You can preview files here but cannot download them unless your contract includes write access.
               </>
             )}
           </p>

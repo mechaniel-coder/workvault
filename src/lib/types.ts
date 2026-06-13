@@ -4,6 +4,9 @@ export type LicenseStatus = 'active' | 'expiring' | 'expired' | 'pending'
 export type WorkRecordType = 'deliverable' | 'milestone' | 'revision' | 'meeting' | 'note'
 export type ProtectionType = 'copyright' | 'watermark' | 'nda' | 'ip_claim' | 'timestamp'
 
+/** File access granted to the client once the contract is fully signed */
+export type ClientFileAccess = 'none' | 'read' | 'write'
+
 export type PaymentMethodType =
   | 'bank_transfer'
   | 'paypal'
@@ -50,6 +53,8 @@ export interface Client {
   address: string
   notes: string
   portalToken: string | null
+  /** Token for the full Client WorkVault app (`/client/:token`) */
+  clientAppToken: string | null
   createdAt: string
 }
 
@@ -93,6 +98,8 @@ export interface Contract {
   signedAt: string | null
   signatures: ContractSignature[]
   signingToken: string | null
+  /** Granted in client WorkVault after both parties sign */
+  clientFileAccess: ClientFileAccess
   createdAt: string
   updatedAt: string
 }
@@ -367,6 +374,29 @@ export interface ClientHubSession {
   invoices: ClientHubInvoice[]
   contracts: ClientHubContract[]
   demoUrl: string | null
+  clientFileAccess: ClientFileAccess
+}
+
+/** Published session for the client-facing WorkVault app */
+export interface ClientAppSessionPublic {
+  enabled: boolean
+  token: string
+  clientId: string
+  clientName: string
+  clientEmail: string
+  clientCompany: string
+  contractorName: string
+  contractorEmail: string
+  contractorLogo: string
+  label: string
+  allowDownloads: boolean
+  projectTransfer: DemoProjectTransfer
+  clientRoom: ClientRoomConfig
+  publishedAt: string
+  /** Effective file access from signed contracts */
+  clientFileAccess: ClientFileAccess
+  /** Filtered app state scoped to this client */
+  appState: AppState
 }
 
 export type ProjectStage = 'lead' | 'proposal' | 'active' | 'delivered' | 'invoiced' | 'paid'

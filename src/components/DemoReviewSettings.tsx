@@ -185,8 +185,8 @@ export function DemoReviewSettings() {
                 Allow client downloads
               </p>
               <p className="text-xs text-surface-500 mt-1 leading-relaxed">
-                Off by default (view-only). Enable before sharing the link if you want clients to download
-                project files, PDFs, and CSV exports. You can change this anytime — re-publish by turning the room off and on.
+                Off by default (view-only). Applies to the <strong>demo/review room</strong> only.
+                Client WorkVault file access is controlled per contract when you create it.
               </p>
             </div>
           </label>

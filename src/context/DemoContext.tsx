@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import type { DemoRoomMode, DemoProjectTransfer } from '../lib/types'
+import type { DemoRoomMode, DemoProjectTransfer, ClientFileAccess } from '../lib/types'
 import { DEFAULT_DEMO_PROJECT_TRANSFER } from '../lib/types'
 
 export type DemoContextValue = {
@@ -10,6 +10,8 @@ export type DemoContextValue = {
   basePath: string
   projectTransfer: DemoProjectTransfer
   allowDownloads: boolean
+  /** When set (client app), overrides demo download behavior for project files */
+  clientFileAccess?: ClientFileAccess
   isDemoSession: true
   isReadOnly: boolean
   blockedMessage: string | null
@@ -26,10 +28,11 @@ type DemoProviderProps = {
   contractorName: string
   projectTransfer?: DemoProjectTransfer
   allowDownloads?: boolean
+  clientFileAccess?: ClientFileAccess
   children: ReactNode
 }
 
-export function DemoProvider({ token, mode, label, contractorName, projectTransfer, allowDownloads = false, children }: DemoProviderProps) {
+export function DemoProvider({ token, mode, label, contractorName, projectTransfer, allowDownloads = false, clientFileAccess, children }: DemoProviderProps) {
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null)
 
   const notifyBlocked = useCallback(() => {
@@ -52,6 +55,7 @@ export function DemoProvider({ token, mode, label, contractorName, projectTransf
         basePath: `/demo/${token}`,
         projectTransfer: projectTransfer || { ...DEFAULT_DEMO_PROJECT_TRANSFER },
         allowDownloads,
+        clientFileAccess,
         isDemoSession: true,
         isReadOnly: mode === 'review',
         blockedMessage,

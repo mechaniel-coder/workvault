@@ -72,6 +72,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         address: '42 Sample Street, Demo City',
         notes: 'Sample client for preview purposes only.',
         portalToken: null,
+        clientAppToken: null,
         createdAt: isoDaysAgo(90),
       },
       {
@@ -83,6 +84,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         address: '88 Preview Ave',
         notes: 'Demo account — not a real business.',
         portalToken: null,
+        clientAppToken: null,
         createdAt: isoDaysAgo(45),
       },
       {
@@ -94,6 +96,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         address: '200 Sandbox Blvd',
         notes: '',
         portalToken: null,
+        clientAppToken: null,
         createdAt: isoDaysAgo(14),
       },
     ],
@@ -147,6 +150,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         signedAt: isoDaysAgo(60),
         signatures: [],
         signingToken: null,
+        clientFileAccess: 'read',
         createdAt: isoDaysAgo(70),
         updatedAt: isoDaysAgo(60),
       },

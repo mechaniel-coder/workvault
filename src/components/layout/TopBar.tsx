@@ -3,6 +3,7 @@ import { Bell, Search } from 'lucide-react'
 import { useStore } from '../../context/StoreContext'
 import { useAuth } from '../../context/AuthContext'
 import { useDemoOptional } from '../../context/DemoContext'
+import { useClientAppOptional } from '../../context/ClientAppContext'
 import { formatDate } from '../../lib/utils'
 
 const PAGE_TITLES: Record<string, string> = {
@@ -25,20 +26,27 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings': 'Settings',
   '/project': 'Your Project',
   '/about': 'Preview Info',
+  '/review': 'Review & Sign-off',
+  '/messages': 'Messages',
 }
 
-export function TopBar({ demoMode }: { demoMode?: boolean }) {
+export function TopBar({ demoMode, clientMode }: { demoMode?: boolean; clientMode?: boolean }) {
   const location = useLocation()
   const { state } = useStore()
   const { user } = useAuth()
   const demo = useDemoOptional()
+  const clientApp = useClientAppOptional()
 
-  const pathKey = demo?.basePath
-    ? location.pathname.replace(demo.basePath, '') || '/'
+  const pathKey = (demo?.basePath || clientApp?.basePath)
+    ? location.pathname.replace(demo?.basePath || clientApp!.basePath, '') || '/'
     : location.pathname
 
-  const title = PAGE_TITLES[pathKey] || (pathKey === '/about' ? 'Preview Info' : pathKey === '/project' ? 'Your Project' : 'WorkVault')
-  const displayName = demoMode ? 'Preview Guest' : (state.profile.name || user?.name || 'Contractor')
+  const title = PAGE_TITLES[pathKey] || 'WorkVault'
+  const displayName = clientMode
+    ? (state.profile.name || clientApp?.clientName || 'Client')
+    : demoMode
+      ? 'Preview Guest'
+      : (state.profile.name || user?.name || 'Contractor')
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
@@ -70,7 +78,13 @@ export function TopBar({ demoMode }: { demoMode?: boolean }) {
         <div className="flex items-center gap-2.5 pl-2 border-l border-surface-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-surface-800 leading-tight">{displayName}</p>
-            <p className="text-[11px] text-surface-400">{demoMode ? 'Read-only preview guest' : (state.profile.email || user?.email || 'Local account')}</p>
+            <p className="text-[11px] text-surface-400">
+              {clientMode
+                ? `Client workspace · ${clientApp?.contractorName || 'Contractor'}`
+                : demoMode
+                  ? 'Read-only preview guest'
+                  : (state.profile.email || user?.email || 'Local account')}
+            </p>
           </div>
           <div className="flex h-9 w-9 items-center justify-center rounded-full gradient-brand text-white text-sm font-semibold shadow-md shadow-brand-600/20">
             {initial}
