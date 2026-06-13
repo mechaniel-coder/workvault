@@ -36,7 +36,9 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "hardenedRuntime": true,
+      "entitlements": "Entitlements.plist"
     },
     "windows": {
       "nsis": {

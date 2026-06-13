@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, HelpCircle, Layers, Search, Workflow } from 'lucide-react'
+import { SiteFooter } from '../components/layout/SiteFooter'
 import {
   INDUSTRY_CATEGORIES,
   INDUSTRY_LIST,
@@ -141,6 +142,7 @@ function IndustryDetailPage({
           {website.footerTagline}
         </p>
       </div>
+      <SiteFooter />
     </div>
   )
 }
@@ -231,6 +233,7 @@ function IndustryIndexPage({ onSelect, onStartGeneral }: { onSelect: (id: Indust
           </Button>
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }

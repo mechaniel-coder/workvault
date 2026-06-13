@@ -14,6 +14,10 @@ dist-ssr
 .netlify
 installers/*.dmg
 installers/*.app
+installers/*.exe
+installers/*.AppImage
+installers/*.deb
+.git-rewrite/
 src-tauri/target
 
 # Editor directories and files

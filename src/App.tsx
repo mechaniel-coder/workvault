@@ -40,6 +40,8 @@ import Tax1099 from './pages/Tax1099'
 import Inbox from './pages/Inbox'
 import ClientWorkspaceOpen from './pages/ClientWorkspaceOpen'
 import IndustryWelcome from './pages/IndustryWelcome'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 
 function ProtectedApp() {
   return (
@@ -100,6 +102,8 @@ export default function App() {
           <Routes>
             <Route path="/welcome" element={<IndustryWelcome />} />
             <Route path="/welcome/:industryId" element={<IndustryWelcome />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/sign/:token" element={<SignContractPage />} />
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/open-client" element={<ClientWorkspaceOpen />} />

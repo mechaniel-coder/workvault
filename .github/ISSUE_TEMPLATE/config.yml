@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Bug report
+    url: https://github.com/mechaniel-coder/workvault/issues/new?template=bug_report.yml
+    about: Report a problem with the app
+  - name: Feature request
+    url: https://github.com/mechaniel-coder/workvault/issues/new?template=feature_request.yml
+    about: Suggest an improvement
   - name: License terms (read first)
     url: https://github.com/mechaniel-coder/workvault/blob/main/LICENSE
     about: Full proprietary license — what is allowed without permission

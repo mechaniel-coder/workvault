@@ -1,0 +1,63 @@
+name: Bug report
+description: Report something broken in WorkVault
+title: "Bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    value: |
+      Thanks for reporting a bug. Please include steps to reproduce and your platform.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS desktop app
+        - Windows desktop app
+        - Linux desktop app
+        - Web (workvault.netlify.app)
+        - Mobile PWA
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: e.g. v0.2.0 or browser date
+      placeholder: v0.2.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open WorkVault
+        2. Go to Settings → …
+        3. Click …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs
+      description: Paste screenshots, console errors, or relevant log excerpts

@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest an improvement or new capability
+title: "Feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or pain point
+      placeholder: As a contractor, I need to …
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: WorkVault could …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Desktop app
+        - Web / PWA
+        - Contracts & e-sign
+        - Invoicing & payments
+        - Time tracking
+        - Client workspaces
+        - Integrations
+        - Industry workspaces
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional

@@ -16,6 +16,24 @@
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <a href="https://workvault.netlify.app/welcome">
+    <img src="docs/screenshots/welcome-industries.png" alt="Industry welcome — 36 tailored workspaces" width="720" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/welcome-construction.png" alt="Construction & trades welcome page" width="360" />
+  &nbsp;
+  <img src="docs/screenshots/onboarding.png" alt="Industry picker during onboarding" width="360" />
+</p>
+
+Live app: [workvault.netlify.app](https://workvault.netlify.app) · Industry pages: [/welcome](https://workvault.netlify.app/welcome)
+
+---
+
 ## Download the app (recommended)
 
 WorkVault is a **desktop app** for Mac, Windows, and Linux. Your data lives on your machine — not in a browser tab.
@@ -32,8 +50,7 @@ WorkVault is a **desktop app** for Mac, Windows, and Linux. Your data lives on y
 2. **Open** the disk image and drag **WorkVault** into **Applications**
 3. **Launch** WorkVault from Applications or Spotlight
 
-> **First launch:** macOS may show an “unidentified developer” warning because the app is not notarized yet.  
-> Right-click **WorkVault → Open**, then confirm once.
+> **First launch:** macOS may show an “unidentified developer” warning until the app is signed and notarized. See [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md).
 
 Data is stored at: `~/Library/Application Support/com.workvault.desktop/`
 
@@ -229,6 +246,8 @@ Official installers are published on [GitHub Releases](https://github.com/mechan
 | `capacitor.config.ts` | iOS/Android native shell config |
 | `deploy/` | Docker self-host stack |
 | `docs/PLATFORMS.md` | Full multi-platform guide |
+| `docs/MACOS_SIGNING.md` | Code signing & notarization |
+| `docs/NETLIFY_ENV.md` | Production environment variables |
 | `netlify/functions/` | Serverless API (payments, OAuth, AI, sync) |
 | `netlify.toml` | Netlify build & SPA routing |
 
@@ -250,6 +269,6 @@ release builds only. **The source code is not open source.**
 **No cloning, forking, or reuse of the source code without obtaining a license
 from the copyright holder.**
 
-Full terms: [LICENSE](LICENSE)
+Full terms: [LICENSE](LICENSE) · [Privacy](https://workvault.netlify.app/privacy) · [Terms](https://workvault.netlify.app/terms) · [Security](SECURITY.md)
 
 **License inquiries:** [Request a license](https://github.com/mechaniel-coder/workvault/issues/new?template=license_inquiry.yml)
