@@ -105,38 +105,7 @@ export interface TeamMember {
   inviteToken: string | null
   status: TeamMemberStatus
   notes: string
-  /** Can use shared Cursor CLI workflows from WorkVault (contractor + team only) */
-  cursorCliAccess: boolean
   createdAt: string
-}
-
-export type CursorCliMode = 'agent' | 'plan' | 'ask'
-
-export type CursorCliWorkflowCategory = 'contracts' | 'invoices' | 'projects' | 'general'
-
-export interface CursorCliSettings {
-  enabled: boolean
-  apiKey: string
-  defaultModel: string
-  defaultMode: CursorCliMode
-  shareWorkflowsWithTeam: boolean
-}
-
-export interface CursorCliWorkflow {
-  id: string
-  name: string
-  description: string
-  prompt: string
-  mode: CursorCliMode
-  model: string | null
-  teamVisible: boolean
-  category: CursorCliWorkflowCategory
-  createdAt: string
-}
-
-export interface CursorCliConfig {
-  settings: CursorCliSettings
-  workflows: CursorCliWorkflow[]
 }
 
 /** Third-party guest invited into a client's WorkVault workspace */
@@ -962,7 +931,6 @@ export interface AppState {
   demoSettings: DemoSettings
   teamMembers: TeamMember[]
   clientGuestInvites: ClientGuestInvite[]
-  cursorCli: CursorCliConfig
 }
 
 export const DEFAULT_PROFILE: BusinessProfile = {
@@ -1126,60 +1094,6 @@ export const DEFAULT_TAX1099_SETTINGS: Tax1099Settings = {
 export const DEFAULT_CALENDAR_SYNC_META: CalendarSyncMeta = {
   lastSyncedAt: null,
   eventMap: {},
-}
-
-export const DEFAULT_CURSOR_CLI_SETTINGS: CursorCliSettings = {
-  enabled: false,
-  apiKey: '',
-  defaultModel: 'composer-2.5',
-  defaultMode: 'agent',
-  shareWorkflowsWithTeam: true,
-}
-
-export function createDefaultCursorCliWorkflows(): CursorCliWorkflow[] {
-  const now = new Date().toISOString()
-  const seed = (name: string, description: string, prompt: string, category: CursorCliWorkflowCategory): CursorCliWorkflow => ({
-    id: crypto.randomUUID(),
-    name,
-    description,
-    prompt,
-    mode: 'agent',
-    model: null,
-    teamVisible: true,
-    category,
-    createdAt: now,
-  })
-  return [
-    seed(
-      'Draft contract from scope',
-      'Generate a contract draft from project scope notes',
-      'Review the project scope and draft a freelance contract with payment milestones, IP assignment, and revision limits. Use plain language suitable for a small business client.',
-      'contracts',
-    ),
-    seed(
-      'Invoice follow-up email',
-      'Write a polite payment reminder for an overdue invoice',
-      'Write a professional but friendly invoice follow-up email. Include the invoice number, amount due, due date, and a clear call to action. Keep it under 150 words.',
-      'invoices',
-    ),
-    seed(
-      'Scope creep analysis',
-      'Flag out-of-scope requests from client messages',
-      'Analyze recent client feedback and messages. List any requests that appear outside the original scope, estimate effort, and suggest how to document them as change orders.',
-      'projects',
-    ),
-    seed(
-      'Weekly status summary',
-      'Summarize project progress for a client update',
-      'Summarize this week\'s project progress: completed tasks, blockers, next steps, and anything the client needs to decide. Format as a brief email update.',
-      'general',
-    ),
-  ]
-}
-
-export const DEFAULT_CURSOR_CLI: CursorCliConfig = {
-  settings: { ...DEFAULT_CURSOR_CLI_SETTINGS },
-  workflows: createDefaultCursorCliWorkflows(),
 }
 
 export const DEFAULT_DEMO_PROJECT_TRANSFER: DemoProjectTransfer = {

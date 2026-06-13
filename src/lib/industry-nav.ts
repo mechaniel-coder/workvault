@@ -20,7 +20,6 @@ import {
   Plug,
   FileSpreadsheet,
   UserCircle2,
-  Terminal,
   Inbox,
 } from 'lucide-react'
 import type { IndustryConfig, NavRouteId } from './industries'
@@ -82,7 +81,6 @@ const NAV_CATALOG: Array<{ section: string; items: Array<Omit<NavItem, 'label'> 
     items: [
       { id: 'team', to: '/team', icon: UserCircle2, defaultLabel: 'Team' },
       { id: 'integrations', to: '/integrations', icon: Plug, defaultLabel: 'Integrations' },
-      { id: 'cursor-cli', to: '/cursor-cli', icon: Terminal, defaultLabel: 'Cursor CLI' },
       { id: 'settings', to: '/settings', icon: Settings, defaultLabel: 'Settings' },
     ],
   },
@@ -122,8 +120,5 @@ export function pageTitleForPath(config: IndustryConfig, path: string): string {
     .flatMap((s) => s.items)
     .find((item) => item.to === normalized)
   if (match) return match.label
-  if (normalized.startsWith('/cursor-cli')) {
-    return findNavItem(config, 'cursor-cli')?.label ?? 'Cursor CLI'
-  }
   return 'WorkVault'
 }

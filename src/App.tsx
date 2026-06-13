@@ -22,10 +22,6 @@ import GuestAppShell from './pages/GuestAppShell'
 import Team from './pages/Team'
 import TeamJoin from './pages/TeamJoin'
 import Integrations from './pages/Integrations'
-import CursorCli from './pages/CursorCli'
-import CursorCliChat from './pages/CursorCliChat'
-import CursorCliSetup from './pages/CursorCliSetup'
-import CursorCliReference from './pages/CursorCliReference'
 import ClientDashboard from './pages/ClientDashboard'
 import ClientMessages from './pages/ClientMessages'
 import ClientReview from './pages/ClientReview'
@@ -75,10 +71,6 @@ const appRoutes = (
     <Route path="records" element={<WorkRecords />} />
     <Route path="clients" element={<Clients />} />
     <Route path="team" element={<Team />} />
-    <Route path="cursor-cli" element={<CursorCli />} />
-    <Route path="cursor-cli/chat" element={<CursorCliChat />} />
-    <Route path="cursor-cli/setup" element={<CursorCliSetup />} />
-    <Route path="cursor-cli/reference" element={<CursorCliReference />} />
     <Route path="integrations" element={<Integrations />} />
     <Route path="settings" element={<SettingsPage />} />
   </>

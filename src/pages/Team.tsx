@@ -10,8 +10,6 @@ import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { TeamMemberRole } from '../lib/types'
 import { TEAM_ROLE_OPTIONS, getTeamInviteUrl, publishTeamInvite, teamRoleLabel } from '../lib/team-invites'
-import { CursorCliTeamPanel } from '../components/CursorCliTeamPanel'
-
 const emptyForm = {
   name: '',
   email: '',
@@ -121,8 +119,6 @@ export default function Team() {
           ))}
         </div>
       )}
-
-      <CursorCliTeamPanel />
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Add Team Member">
         <div className="space-y-4">

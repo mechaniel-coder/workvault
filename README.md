@@ -87,7 +87,7 @@ WorkVault adapts to how you work. Pick your industry during setup or at [workvau
 |----------|-----------------|
 | **General** | Full feature set — default experience |
 | **Creative & Design** | Creative rights, proposals, portfolio records |
-| **Software & Tech** | SOWs, IP protection, Cursor CLI, deployments |
+| **Software & Tech** | SOWs, IP protection, deployments |
 | **Construction & Trades** | Change orders, subs, licenses, customers |
 | **Consulting & Coaching** | Engagements, session tracking, proposals |
 | **Marketing & Agency** | Campaign pipeline, pitch decks, retainers |

@@ -12,7 +12,6 @@ import {
   Sparkles,
   Kanban,
   FileSignature,
-  Terminal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
@@ -31,7 +30,6 @@ const ACTION_ICONS: Record<string, LucideIcon> = {
   '/proposals': FileSignature,
   '/pipeline': Kanban,
   '/scope': AlertTriangle,
-  '/cursor-cli': Terminal,
 }
 
 export default function Dashboard() {

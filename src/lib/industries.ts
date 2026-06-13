@@ -105,7 +105,6 @@ export type NavRouteId =
   | 'records'
   | 'team'
   | 'integrations'
-  | 'cursor-cli'
   | 'settings'
 
 export interface IndustryTerminology {
@@ -276,7 +275,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Creative',
     description: 'Designers, photographers, illustrators, and visual artists.',
     editionLabel: 'Creative Edition',
-    hiddenRoutes: ['tax-1099', 'subcontractors', 'cursor-cli', 'tools'],
+    hiddenRoutes: ['tax-1099', 'subcontractors', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       protection: 'Creative Rights',
@@ -356,7 +355,6 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
       protection: 'IP & Code Rights',
       hosting: 'Deployments',
       records: 'Delivery Log',
-      'cursor-cli': 'Cursor CLI',
     },
     terminology: {
       ...BASE_TERMINOLOGY,
@@ -368,8 +366,8 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     onboarding: {
       welcomeTitle: 'WorkVault for Developers',
       welcomeBody:
-        'Track sprint hours, send SOWs, protect IP, sync with Cursor CLI, and invoice clients — local-first with optional cloud.',
-      highlights: ['SOW Templates', 'Time Tracking', 'IP Protection', 'Cursor CLI'],
+        'Track sprint hours, send SOWs, protect IP, and invoice clients — local-first with optional cloud.',
+      highlights: ['SOW Templates', 'Time Tracking', 'IP Protection', 'Invoicing'],
     },
     dashboard: {
       badge: 'Dev Console',
@@ -378,7 +376,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
       quickActions: [
         { route: '/time', label: 'Log Dev Hours' },
         { route: '/contracts', label: 'New SOW' },
-        { route: '/cursor-cli', label: 'Cursor CLI' },
+        { route: '/invoices', label: 'Send Invoice' },
       ],
       statLabels: { protected: 'Protected Assets', clients: 'clients' },
       emptyActivity: 'No activity yet. Log dev hours or create an SOW.',
@@ -386,11 +384,11 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     website: web(
       {
         metaDescription:
-          'WorkVault for software contractors — SOWs, IP protection, time tracking, Cursor CLI integration, and invoicing.',
+          'WorkVault for software contractors — SOWs, IP protection, time tracking, and invoicing.',
         heroTitle: 'Built for software contractors',
         heroSubtitle:
-          'SOWs, sprint time tracking, IP protection, deployment records, and Cursor CLI — on your machine.',
-        features: ['SOW & contracts', 'Track dev hours', 'Protect IP & code', 'Cursor CLI workflows'],
+          'SOWs, sprint time tracking, IP protection, and deployment records — on your machine.',
+        features: ['SOW & contracts', 'Track dev hours', 'Protect IP & code', 'Client invoicing'],
         footerTagline: 'SHIP · PROTECT · INVOICE',
       },
       {
@@ -398,14 +396,13 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
         workflows: [
           { title: 'Scope the engagement', description: 'Issue a SOW with deliverables, acceptance criteria, and rate terms.' },
           { title: 'Track sprint time', description: 'Bill hourly or milestone — timer tied to client and engagement.' },
-          { title: 'Protect & deliver', description: 'IP claims on repos, delivery log, optional Cursor CLI automation.' },
+          { title: 'Protect & deliver', description: 'IP claims on repos, delivery log, and milestone handoff.' },
         ],
         useCases: [
           { title: 'Backend API contract', example: 'SOW for 6-week build, weekly invoices, IP clause on all commits.' },
           { title: 'Fractional CTO', example: 'Monthly retainer, session time log, shared docs with the client team.' },
         ],
         faq: [
-          { q: 'Does WorkVault integrate with Cursor?', a: 'Yes — the Developer Edition includes Cursor CLI workflows for contracts and docs.' },
           { q: 'Can I track time per repo or client?', a: 'Time entries link to clients and projects for clean billing exports.' },
         ],
         ctaLabel: 'Start developer workspace',
@@ -415,7 +412,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
       'Protect IP & code',
       'Generate SOWs',
       'Track dev hours',
-      'Run Cursor CLI',
+      'Send invoices',
     ],
   }),
 
@@ -427,7 +424,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Trades',
     description: 'General contractors, electricians, plumbers, HVAC, and field trades.',
     editionLabel: 'Trades Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'inbox'],
+    hiddenRoutes: ['hosting', 'inbox'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Customers',
@@ -511,7 +508,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Consulting',
     description: 'Business consultants, coaches, advisors, and professional services.',
     editionLabel: 'Consulting Edition',
-    hiddenRoutes: ['hosting', 'tools', 'subcontractors', 'cursor-cli'],
+    hiddenRoutes: ['hosting', 'tools', 'subcontractors'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       pipeline: 'Engagements',
@@ -661,7 +658,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Legal',
     description: 'Solo practitioners, paralegals, contract attorneys, and legal consultants.',
     editionLabel: 'Legal Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'tools', 'subcontractors'],
+    hiddenRoutes: ['hosting', 'tools', 'subcontractors'],
     mobileTabRoutes: ['dashboard', 'time', 'contracts', 'clients'],
     navLabels: {
       contracts: 'Engagement Agreements',
@@ -741,7 +738,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Wellness',
     description: 'Therapists, counselors, wellness coaches, and private-practice clinicians.',
     editionLabel: 'Wellness Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'tax-1099'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'tax-1099'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Patients / Clients',
@@ -822,7 +819,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Photo/Video',
     description: 'Photographers, videographers, editors, and production freelancers.',
     editionLabel: 'Production Edition',
-    hiddenRoutes: ['cursor-cli', 'subcontractors', 'tax-1099', 'tools'],
+    hiddenRoutes: ['subcontractors', 'tax-1099', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       proposals: 'Shoot Proposals',
@@ -900,7 +897,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Writing',
     description: 'Copywriters, editors, journalists, and content strategists.',
     editionLabel: 'Writer Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'licenses'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'licenses'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       proposals: 'Pitch & Quotes',
@@ -978,7 +975,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Real Estate',
     description: 'Agents, brokers, property managers, and real-estate consultants.',
     editionLabel: 'Real Estate Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: {
       clients: 'Clients & Leads',
@@ -1060,7 +1057,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Education',
     description: 'Tutors, course creators, trainers, and educational consultants.',
     editionLabel: 'Education Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tax-1099'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tax-1099'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Students / Clients',
@@ -1143,7 +1140,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Accounting',
     description: 'Bookkeepers, tax preparers, fractional CFOs, and accounting consultants.',
     editionLabel: 'Accounting Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'tools', 'subcontractors'],
+    hiddenRoutes: ['hosting', 'tools', 'subcontractors'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Clients',
@@ -1206,7 +1203,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Events',
     description: 'Event planners, wedding coordinators, caterers, and venue freelancers.',
     editionLabel: 'Events Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: {
       pipeline: 'Event Pipeline',
@@ -1277,7 +1274,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Nonprofit',
     description: 'Nonprofit contractors, grant writers, program consultants, and fiscal sponsors.',
     editionLabel: 'Nonprofit Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'finance', 'invoices', 'clients'],
     navLabels: {
       clients: 'Funders / Partners',
@@ -1348,7 +1345,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Fitness',
     description: 'Personal trainers, yoga instructors, coaches, and gym contractors.',
     editionLabel: 'Fitness Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'tax-1099'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'tax-1099'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Clients / Members',
@@ -1418,7 +1415,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Architecture',
     description: 'Architects, interior designers, landscape designers, and drafters.',
     editionLabel: 'Architecture Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting'],
+    hiddenRoutes: ['hosting'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'contracts', 'clients'],
     navLabels: {
       pipeline: 'Project Pipeline',
@@ -1488,7 +1485,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Music',
     description: 'Producers, engineers, session musicians, composers, and podcast editors.',
     editionLabel: 'Music Edition',
-    hiddenRoutes: ['cursor-cli', 'subcontractors', 'tax-1099', 'tools'],
+    hiddenRoutes: ['subcontractors', 'tax-1099', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       proposals: 'Session Quotes',
@@ -1557,7 +1554,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Culinary',
     description: 'Private chefs, caterers, food trucks, and recipe consultants.',
     editionLabel: 'Culinary Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: {
       pipeline: 'Booking Pipeline',
@@ -1628,7 +1625,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Translation',
     description: 'Translators, interpreters, localization specialists, and subtitlers.',
     editionLabel: 'Translation Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'licenses'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'licenses'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       proposals: 'Project Quotes',
@@ -1697,7 +1694,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Research',
     description: 'Research consultants, lab contractors, grant researchers, and academic freelancers.',
     editionLabel: 'Research Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'contracts', 'clients'],
     navLabels: {
       clients: 'Institutions / PIs',
@@ -1767,7 +1764,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Cleaning',
     description: 'Residential and commercial cleaners, janitorial contractors, and move-out specialists.',
     editionLabel: 'Cleaning Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals', 'tools'],
+    hiddenRoutes: ['hosting', 'proposals', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Customers',
@@ -1839,7 +1836,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Automotive',
     description: 'Mobile mechanics, auto detailers, independent repair shops, and fleet contractors.',
     editionLabel: 'Automotive Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals'],
+    hiddenRoutes: ['hosting', 'proposals'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Customers',
@@ -1912,7 +1909,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Pet Care',
     description: 'Dog walkers, pet sitters, groomers, trainers, and mobile vet contractors.',
     editionLabel: 'Pet Care Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'tax-1099'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'tax-1099'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: {
       clients: 'Pet Parents',
@@ -1982,7 +1979,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Insurance',
     description: 'Independent agents, brokers, adjusters, and insurance consultants.',
     editionLabel: 'Insurance Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'tools', 'subcontractors'],
+    hiddenRoutes: ['hosting', 'tools', 'subcontractors'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'contracts', 'clients'],
     navLabels: { pipeline: 'Policy Pipeline', contracts: 'Policy Agreements', records: 'Policy Records', clients: 'Policyholders' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Policyholder', clients: 'Policyholders', contract: 'Policy Agreement', contracts: 'Policy Agreements', project: 'Policy' },
@@ -2013,7 +2010,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Fashion',
     description: 'Stylists, tailors, custom clothiers, and fashion designers.',
     editionLabel: 'Fashion Edition',
-    hiddenRoutes: ['cursor-cli', 'subcontractors', 'tax-1099', 'tools'],
+    hiddenRoutes: ['subcontractors', 'tax-1099', 'tools'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: { pipeline: 'Order Pipeline', proposals: 'Design Quotes', protection: 'Design IP', records: 'Lookbook Records' },
     terminology: { ...BASE_TERMINOLOGY, project: 'Collection / Order', contract: 'Custom Order Agreement', contracts: 'Order Agreements', workProtection: 'Design IP' },
@@ -2044,7 +2041,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Beauty',
     description: 'Hair stylists, estheticians, makeup artists, and mobile beauty pros.',
     editionLabel: 'Beauty Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Clients', time: 'Appointment Log', contracts: 'Service Agreements', pipeline: 'Booking Calendar', records: 'Service Records' },
     terminology: { ...BASE_TERMINOLOGY, contract: 'Service Agreement', contracts: 'Service Agreements', project: 'Appointment / Package' },
@@ -2075,7 +2072,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Security',
     description: 'Private security contractors, event security, and patrol services.',
     editionLabel: 'Security Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals', 'tools'],
+    hiddenRoutes: ['hosting', 'proposals', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Clients / Sites', contracts: 'Service Contracts', time: 'Shift Log', licenses: 'Guard Certs', records: 'Incident Records', scope: 'Post Orders' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Client / Site', clients: 'Clients & Sites', contract: 'Security Contract', contracts: 'Security Contracts', project: 'Post / Detail', licenses: 'Guard Certifications' },
@@ -2106,7 +2103,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Landscaping',
     description: 'Landscapers, lawn care crews, arborists, and irrigation specialists.',
     editionLabel: 'Landscaping Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals'],
+    hiddenRoutes: ['hosting', 'proposals'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Customers', pipeline: 'Route Schedule', scope: 'Extra Work Orders', tools: 'Equipment', records: 'Property Records' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Customer', clients: 'Customers', contract: 'Service Contract', contracts: 'Service Contracts', project: 'Property / Job', subcontractor: 'Crew Partner' },
@@ -2137,7 +2134,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Childcare',
     description: 'Nannies, home daycare providers, and childcare contractors.',
     editionLabel: 'Childcare Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'subcontractors', 'tools', 'tax-1099'],
+    hiddenRoutes: ['hosting', 'subcontractors', 'tools', 'tax-1099'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Families', contracts: 'Care Agreements', time: 'Care Log', records: 'Daily Records', licenses: 'Certifications' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Family', clients: 'Families', contract: 'Care Agreement', contracts: 'Care Agreements', project: 'Care Schedule', licenses: 'Certifications' },
@@ -2168,7 +2165,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Logistics',
     description: 'Couriers, last-mile delivery contractors, and freight owner-operators.',
     editionLabel: 'Logistics Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals', 'tools'],
+    hiddenRoutes: ['hosting', 'proposals', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Shippers / Clients', pipeline: 'Dispatch Queue', records: 'Delivery Records', scope: 'Accessorial Charges', tools: 'Fleet / Equipment' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Shipper', clients: 'Shippers', contract: 'Carrier Agreement', contracts: 'Carrier Agreements', project: 'Load / Route' },
@@ -2199,7 +2196,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Solar',
     description: 'Solar installers, energy auditors, and EV charger contractors.',
     editionLabel: 'Solar Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'proposals'],
+    hiddenRoutes: ['hosting', 'proposals'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: { clients: 'Customers', pipeline: 'Install Pipeline', contracts: 'Install Agreements', scope: 'Change Orders', licenses: 'Installer Certs', records: 'System Records' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Customer', clients: 'Customers', contract: 'Install Agreement', contracts: 'Install Agreements', project: 'Install Job', licenses: 'Installer Certifications' },
@@ -2230,7 +2227,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Film',
     description: 'Producers, directors, crew contractors, and production coordinators.',
     editionLabel: 'Production Edition',
-    hiddenRoutes: ['cursor-cli', 'tax-1099'],
+    hiddenRoutes: ['tax-1099'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: { pipeline: 'Production Schedule', proposals: 'Bid Packages', contracts: 'Deal Memos', subcontractors: 'Crew & Vendors', records: 'Production Records', scope: 'Overages' },
     terminology: { ...BASE_TERMINOLOGY, project: 'Production', contract: 'Deal Memo', contracts: 'Deal Memos', subcontractor: 'Crew / Vendor' },
@@ -2261,7 +2258,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Aviation',
     description: 'Flight instructors, charter pilots, drone operators, and aviation consultants.',
     editionLabel: 'Aviation Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli', 'tools'],
+    hiddenRoutes: ['hosting', 'tools'],
     mobileTabRoutes: ['dashboard', 'time', 'invoices', 'clients'],
     navLabels: { clients: 'Students / Clients', contracts: 'Training Agreements', time: 'Flight Log', licenses: 'Ratings & Certs', records: 'Flight Records' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Student / Client', clients: 'Students & Clients', contract: 'Training Agreement', contracts: 'Training Agreements', project: 'Training Program', licenses: 'Ratings & Certificates' },
@@ -2292,7 +2289,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Print',
     description: 'Print shops, sign makers, wide-format contractors, and apparel printers.',
     editionLabel: 'Print Edition',
-    hiddenRoutes: ['hosting', 'cursor-cli'],
+    hiddenRoutes: ['hosting'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: { pipeline: 'Job Queue', proposals: 'Print Quotes', contracts: 'Print Orders', scope: 'Rush / Changes', records: 'Job Records' },
     terminology: { ...BASE_TERMINOLOGY, project: 'Print Job', contract: 'Print Order', contracts: 'Print Orders' },
@@ -2323,7 +2320,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
     shortLabel: 'Property Mgmt',
     description: 'Property managers, HOA managers, and rental portfolio contractors.',
     editionLabel: 'Property Edition',
-    hiddenRoutes: ['cursor-cli', 'hosting', 'proposals'],
+    hiddenRoutes: ['hosting', 'proposals'],
     mobileTabRoutes: ['dashboard', 'pipeline', 'invoices', 'clients'],
     navLabels: { clients: 'Owners / Tenants', pipeline: 'Unit Pipeline', contracts: 'Management Agreements', scope: 'Work Orders', records: 'Property Records', subcontractors: 'Vendors' },
     terminology: { ...BASE_TERMINOLOGY, client: 'Owner', clients: 'Owners & Tenants', contract: 'Management Agreement', contracts: 'Management Agreements', project: 'Property / Unit', subcontractor: 'Vendor' },

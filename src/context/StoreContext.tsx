@@ -4,13 +4,12 @@ import type {
   EmailTemplate, Expense, HostedProject, IntegrationSettings, Invoice, License,
   Milestone, Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor,
   SyncMeta, TaxSettings, TimeEntry, VaultDocument, WorkProtection, WorkRecord,
-  DemoSettings, TeamMember, ClientGuestInvite, CursorCliSettings, CursorCliWorkflow,
+  DemoSettings, TeamMember, ClientGuestInvite,
   IntegrationCredentials, CalendarSyncMeta, Form1099NECRecord, SubcontractorPayment, Tax1099Settings,
   BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
   CloudStorageMeta,
 } from '../lib/types'
 import { DEFAULT_CLIENT_APP_LIFECYCLE } from '../lib/types'
-import { defaultCursorCliAccessForRole } from '../lib/cursor-cli'
 import { defaultSubcontractorTaxFields, syncForm1099Records as build1099RecordDrafts } from '../lib/tax-1099'
 import { applySignatureToContract, createInitialState, loadState, loadStateAsync, saveState } from '../lib/utils'
 import { autoSyncIfEnabled } from '../lib/sync'
@@ -100,17 +99,13 @@ type StoreContextType = {
   deleteMilestone: (id: string) => void
   generateClientPortalToken: (clientId: string) => string
   generateClientAppToken: (clientId: string) => string
-  addTeamMember: (data: Omit<TeamMember, 'id' | 'createdAt' | 'inviteToken' | 'status' | 'cursorCliAccess'> & { inviteToken?: string | null; status?: TeamMember['status']; cursorCliAccess?: boolean }) => TeamMember
+  addTeamMember: (data: Omit<TeamMember, 'id' | 'createdAt' | 'inviteToken' | 'status'> & { inviteToken?: string | null; status?: TeamMember['status'] }) => TeamMember
   updateTeamMember: (id: string, data: Partial<TeamMember>) => void
   deleteTeamMember: (id: string) => void
   generateTeamMemberInviteToken: (memberId: string) => string
   addClientGuestInvite: (data: Omit<ClientGuestInvite, 'id' | 'createdAt' | 'token' | 'accessCount' | 'lastAccessedAt'>) => ClientGuestInvite
   updateClientGuestInvite: (id: string, data: Partial<ClientGuestInvite>) => void
   deleteClientGuestInvite: (id: string) => void
-  updateCursorCliSettings: (data: Partial<CursorCliSettings>) => void
-  addCursorCliWorkflow: (data: Omit<CursorCliWorkflow, 'id' | 'createdAt'>) => CursorCliWorkflow
-  updateCursorCliWorkflow: (id: string, data: Partial<CursorCliWorkflow>) => void
-  deleteCursorCliWorkflow: (id: string) => void
   updateDemoSettings: (data: Partial<DemoSettings>) => void
   isIsolated: boolean
   isReadOnly: boolean
@@ -541,7 +536,6 @@ export function StoreProvider({
           ...data,
           inviteToken: data.inviteToken ?? null,
           status: data.status ?? 'active',
-          cursorCliAccess: data.cursorCliAccess ?? defaultCursorCliAccessForRole(data.role),
         }),
         updateTeamMember: ext.teamMembers.update,
         deleteTeamMember: ext.teamMembers.delete,
@@ -554,10 +548,6 @@ export function StoreProvider({
         }),
         updateClientGuestInvite: ext.clientGuestInvites.update,
         deleteClientGuestInvite: ext.clientGuestInvites.delete,
-        updateCursorCliSettings: ext.updateCursorCliSettings,
-        addCursorCliWorkflow: ext.addCursorCliWorkflow,
-        updateCursorCliWorkflow: ext.updateCursorCliWorkflow,
-        deleteCursorCliWorkflow: ext.deleteCursorCliWorkflow,
         generateClientPortalToken,
         generateClientAppToken,
         updateDemoSettings,

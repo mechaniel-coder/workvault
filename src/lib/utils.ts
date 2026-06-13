@@ -2,7 +2,7 @@ import type { AppState, Contract } from './types'
 import {
   DEFAULT_PROFILE, DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES,
   DEFAULT_DEMO_SETTINGS, DEFAULT_DEMO_PROJECT_TRANSFER, DEFAULT_CLIENT_ROOM_CONFIG,
-  DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS,
+  DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS,
   DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META,
   DEFAULT_CLOUD_STORAGE_META, DEFAULT_CLIENT_APP_LIFECYCLE,
 } from './types'
@@ -55,15 +55,21 @@ export function createInitialState(): AppState {
     demoSettings: { ...DEFAULT_DEMO_SETTINGS },
     teamMembers: [],
     clientGuestInvites: [],
-    cursorCli: structuredClone(DEFAULT_CURSOR_CLI),
   }
 }
 
 export function parseAppState(raw: string): AppState {
-  const parsed = JSON.parse(raw) as AppState
+  const parsed = JSON.parse(raw) as AppState & {
+    cursorCli?: unknown
+    teamMembers?: Array<{ cursorCliAccess?: boolean }>
+  }
+  // Legacy cursorCli blocks in saved data are ignored (not restored onto AppState).
+  void parsed.cursorCli
+  const { cursorCli: _legacyCursorCli, ...parsedRest } = parsed
+  void _legacyCursorCli
   return {
     ...createInitialState(),
-    ...parsed,
+    ...parsedRest,
     profile: {
       ...DEFAULT_PROFILE,
       ...parsed.profile,
@@ -186,17 +192,12 @@ export function parseAppState(raw: string): AppState {
         deliverables: parsed.demoSettings?.projectTransfer?.deliverables || [],
       },
     },
-    teamMembers: (parsed.teamMembers || []).map((m) => ({
-      ...m,
-      cursorCliAccess: m.cursorCliAccess ?? false,
-    })),
+    teamMembers: (parsed.teamMembers || []).map((member) => {
+      const { cursorCliAccess: _legacyAccess, ...m } = member as typeof member & { cursorCliAccess?: boolean }
+      void _legacyAccess
+      return m
+    }),
     clientGuestInvites: parsed.clientGuestInvites || [],
-    cursorCli: {
-      settings: { ...DEFAULT_CURSOR_CLI.settings, ...parsed.cursorCli?.settings },
-      workflows: parsed.cursorCli?.workflows?.length
-        ? parsed.cursorCli.workflows
-        : DEFAULT_CURSOR_CLI.workflows,
-    },
   }
 }
 
@@ -238,7 +239,7 @@ export function exportAllData(state: AppState): string {
 }
 
 export function importAllData(json: string): AppState {
-  const parsed = JSON.parse(json) as AppState
+  const parsed = parseAppState(json)
   saveState(parsed)
   return parsed
 }

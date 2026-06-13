@@ -1,7 +1,7 @@
 import type { Config } from '@netlify/functions'
 import OpenAI from 'openai'
 import { jsonResponse } from './_shared/integrations'
-import { ASSISTANT_TOOLS, buildCursorCliSystemPrompt, buildSystemPrompt } from './_shared/assistant-tools'
+import { ASSISTANT_TOOLS, buildSystemPrompt } from './_shared/assistant-tools'
 
 type ChatMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam
 
@@ -12,7 +12,6 @@ export default async (req: Request) => {
     const body = await req.json() as {
       messages: ChatMessage[]
       context?: string
-      variant?: 'default' | 'cursor-cli'
     }
 
     if (!body.messages?.length) {
@@ -25,9 +24,7 @@ export default async (req: Request) => {
       messages: [
         {
           role: 'system',
-          content: body.variant === 'cursor-cli'
-            ? buildCursorCliSystemPrompt(body.context || 'No context provided.')
-            : buildSystemPrompt(body.context || 'No context provided.'),
+          content: buildSystemPrompt(body.context || 'No context provided.'),
         },
         ...body.messages,
       ],

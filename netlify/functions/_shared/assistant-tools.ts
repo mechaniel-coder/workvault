@@ -91,7 +91,7 @@ export const ASSISTANT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'navigate_to',
-      description: 'Navigate the user to an app page. Paths: /, /time, /pipeline, /proposals, /contracts, /invoices, /inbox, /finance, /scope, /documents, /clients, /integrations, /settings, /tools, /subcontractors, /tax-1099, /cursor-cli',
+      description: 'Navigate the user to an app page. Paths: /, /time, /pipeline, /proposals, /contracts, /invoices, /inbox, /finance, /scope, /documents, /clients, /integrations, /settings, /tools, /subcontractors, /tax-1099',
       parameters: {
         type: 'object',
         properties: { path: { type: 'string', description: 'Route path starting with /' } },
@@ -361,25 +361,6 @@ export const ASSISTANT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     },
   },
 ]
-
-export function buildCursorCliSystemPrompt(appContext: string): string {
-  return `You are the Cursor CLI assistant inside WorkVault — you help contractors draft prompts and terminal commands for the Cursor \`agent\` CLI.
-
-Your job:
-- Use tools to read WorkVault data (clients, invoices, contracts, projects) so prompts are specific and accurate.
-- When the user wants to run something in Cursor CLI, provide a copy-paste ready command in a \`\`\`bash code block.
-- Command format: agent -p "prompt text" [--model "name"] [--mode=plan|ask]
-- Escape double quotes inside prompts with backslash.
-- Explain briefly what the agent prompt will do and any files/context the user should run it from.
-- You may suggest saving a good prompt as a WorkVault workflow.
-- Do not claim you ran the CLI — the user runs commands locally in their terminal.
-- Keep replies concise. Use markdown lists when comparing options.
-
-Today's date is ${new Date().toISOString().split('T')[0]}.
-
-Current app context:
-${appContext}`
-}
 
 export function buildSystemPrompt(appContext: string): string {
   return `You are WorkVault Assistant — an AI copilot embedded in WorkVault, a freelancer business OS.

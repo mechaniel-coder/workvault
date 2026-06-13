@@ -1,8 +1,8 @@
 import type {
-  AppState, AvailabilityBlock, ClientGuestInvite, CursorCliWorkflow, EmailTemplate, Expense,
+  AppState, AvailabilityBlock, ClientGuestInvite, EmailTemplate, Expense,
   Form1099NECRecord, IntegrationSettings, IntegrationCredentials, CalendarSyncMeta, Milestone,
   Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor, SubcontractorPayment,
-  Tax1099Settings, TaxSettings, TeamMember, VaultDocument, CursorCliSettings,
+  Tax1099Settings, TaxSettings, TeamMember, VaultDocument,
   BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
   CloudStorageMeta,
 } from './types'
@@ -207,39 +207,6 @@ export function createExtendedCrud(mutate: Mutate) {
       mutate((s) => ({
         ...s,
         cloudStorageMeta: { ...s.cloudStorageMeta, ...data },
-      }))
-    },
-    updateCursorCliSettings: (data: Partial<CursorCliSettings>) => {
-      mutate((s) => ({
-        ...s,
-        cursorCli: { ...s.cursorCli, settings: { ...s.cursorCli.settings, ...data } },
-      }))
-    },
-    addCursorCliWorkflow: (data: Omit<CursorCliWorkflow, 'id' | 'createdAt'>) => {
-      const now = new Date().toISOString()
-      const item: CursorCliWorkflow = { ...data, id: crypto.randomUUID(), createdAt: now }
-      mutate((s) => ({
-        ...s,
-        cursorCli: { ...s.cursorCli, workflows: [...s.cursorCli.workflows, item] },
-      }))
-      return item
-    },
-    updateCursorCliWorkflow: (id: string, data: Partial<CursorCliWorkflow>) => {
-      mutate((s) => ({
-        ...s,
-        cursorCli: {
-          ...s.cursorCli,
-          workflows: s.cursorCli.workflows.map((w) => (w.id === id ? { ...w, ...data } : w)),
-        },
-      }))
-    },
-    deleteCursorCliWorkflow: (id: string) => {
-      mutate((s) => ({
-        ...s,
-        cursorCli: {
-          ...s.cursorCli,
-          workflows: s.cursorCli.workflows.filter((w) => w.id !== id),
-        },
       }))
     },
   }
