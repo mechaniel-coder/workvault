@@ -2,6 +2,7 @@
   "name": "workvault",
   "private": true,
   "version": "0.2.0",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",

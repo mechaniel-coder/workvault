@@ -1,0 +1,56 @@
+WorkVault Proprietary License
+Copyright (c) 2026 mechaniel-coder. All rights reserved.
+
+This repository and all associated source code, documentation, assets, and
+design (collectively, the "Software") are the exclusive property of the
+copyright holder.
+
+PERMITTED WITHOUT A SEPARATE LICENSE
+------------------------------------
+You may download and use official release builds of WorkVault (for example,
+`.dmg`, `.exe`, or `.AppImage` files published under Releases) for your own
+personal or internal business use, subject to any terms shown with that
+release.
+
+You may access the public web application at the official hosted URL for
+normal end-user use.
+
+PROHIBITED WITHOUT A WRITTEN LICENSE
+------------------------------------
+You may NOT, without prior written permission from the copyright holder:
+
+  - Clone, fork, copy, or mirror this repository or its source code
+  - View, scrape, or reproduce the source for the purpose of creating a
+    competing or derivative product
+  - Modify, adapt, translate, or create derivative works from the Software
+  - Distribute, publish, sublicense, sell, or otherwise make the Software
+    or any portion of it available to third parties
+  - Remove or alter copyright, trademark, or proprietary notices
+  - Use the WorkVault name, branding, or trademarks without authorization
+
+GitHub may display this repository publicly for transparency and distribution
+of official releases. That visibility does not grant any license to copy or
+reuse the source code.
+
+OBTAINING A LICENSE
+--------------------
+Commercial use, redistribution, white-labeling, SaaS hosting of the codebase,
+or any use beyond official release builds requires a separate written license.
+
+To request a license, open an issue at:
+  https://github.com/mechaniel-coder/workvault/issues
+with the subject "License inquiry" and describe your intended use.
+
+THIRD-PARTY COMPONENTS
+----------------------
+The Software includes open-source dependencies subject to their own licenses.
+Those licenses apply only to the respective third-party components, not to
+WorkVault's original source code.
+
+NO WARRANTY
+-----------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY ARISING FROM USE OF THE SOFTWARE.
+
+Unauthorized use may result in termination of access and legal action.

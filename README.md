@@ -248,4 +248,20 @@ If GitHub Actions fails to start, build locally on each OS and upload assets to 
 
 ## License
 
-Private repository — all rights reserved unless otherwise noted.
+**Copyright © 2026 mechaniel-coder. All rights reserved.**
+
+This repository is public for transparency and distribution of official
+release builds only. **The source code is not open source.**
+
+| Allowed without a license | Requires a written license |
+|---------------------------|----------------------------|
+| Download and use official [Releases](https://github.com/mechaniel-coder/workvault/releases) (desktop installers) | Cloning, forking, or copying this repository |
+| Use the hosted web app at [workvault.netlify.app](https://workvault.netlify.app) | Modifying the source or creating derivative works |
+| | Redistributing, reselling, or white-labeling the codebase |
+
+**No cloning, forking, or reuse of the source code without obtaining a license
+from the copyright holder.**
+
+Full terms: [LICENSE](LICENSE)
+
+**License inquiries:** [Open an issue](https://github.com/mechaniel-coder/workvault/issues/new?labels=license&title=License%20inquiry) describing your intended use.
