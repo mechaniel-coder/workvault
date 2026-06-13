@@ -79,13 +79,40 @@ WorkVault adapts to how you work. Pick your industry during setup or at [workvau
 | **Construction & Trades** | Change orders, subs, licenses, customers |
 | **Consulting & Coaching** | Engagements, session tracking, proposals |
 | **Marketing & Agency** | Campaign pipeline, pitch decks, retainers |
+| **Legal & Paralegal** | Matters, engagement agreements, billable hours |
+| **Healthcare & Wellness** | Sessions, care agreements, credentials |
+| **Photo & Video** | Bookings, usage rights, edit time, galleries |
+| **Writing & Content** | Assignments, revision log, copyright protection |
+| **Real Estate** | Deal pipeline, listing agreements, commissions |
+| **Education & Tutoring** | Sessions, learning agreements, enrollments |
+| **Accounting & Bookkeeping** | Engagements, 1099, reconciliation, billing |
+| **Events & Weddings** | Event pipeline, vendors, deposit billing |
+| **Nonprofit & Grants** | Grant pipeline, program records, deliverables |
+| **Fitness & Training** | Sessions, packages, progress tracking |
+| **Architecture & Design** | Design phases, scope changes, drawing records |
+| **Music & Audio** | Session quotes, studio time, rights protection |
+| **Culinary & Catering** | Menu proposals, bookings, prep time |
+| **Translation** | Project quotes, delivery log, confidentiality |
+| **Research & Academia** | Study records, lab hours, grant deliverables |
+| **Cleaning Services** | Recurring routes, job time, extra services |
+| **Automotive & Repair** | Repair orders, bay time, warranty records |
+| **Pet Services** | Visit tracking, care agreements, pet records |
+| **Insurance & Adjusting** | Policy pipeline, renewals, compliance docs |
+| **Fashion & Apparel** | Custom orders, fittings, design IP |
+| **Beauty & Salon** | Appointments, packages, client formulas |
+| **Security Services** | Shift logs, guard certs, incident records |
+| **Landscaping & Lawn** | Routes, crew hours, seasonal extras |
+| **Childcare & Nanny** | Care agreements, daily logs, family billing |
+| **Logistics & Delivery** | Dispatch queue, drive time, accessorials |
+| **Solar & Energy** | Install pipeline, site hours, change orders |
+| **Film & Production** | Bids, deal memos, shoot day logs |
+| **Aviation & Flight** | Flight logs, training agreements, certs |
+| **Print & Signage** | Job queue, rush fees, production tracking |
+| **Property Management** | Unit pipeline, work orders, vendor tracking |
 
-Each industry changes **navigation**, **labels**, **dashboard copy**, **theme colors**, and **welcome/website pages**. Change anytime in **Settings → Industry & workspace**.
+Each industry changes **navigation**, **labels**, **dashboard copy**, **theme colors**, and **welcome pages** with workflows, examples, and FAQ. Change anytime in **Settings → Industry & workspace**.
 
-Industry-specific welcome URLs (shareable):
-- `https://workvault.netlify.app/welcome/construction`
-- `https://workvault.netlify.app/welcome/software`
-- etc.
+Browse all **36 workspaces** at [workvault.netlify.app/welcome](https://workvault.netlify.app/welcome) — searchable and grouped by category.
 
 ---
 

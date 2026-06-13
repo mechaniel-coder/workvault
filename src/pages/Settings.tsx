@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { Settings, Download, Upload, Trash2, Plug, Layers } from 'lucide-react'
+import { useRef, useMemo, useState } from 'react'
+import { Settings, Download, Upload, Trash2, Plug, Layers, Search } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { useIndustry } from '../context/IndustryContext'
 import { Button } from '../components/ui/Button'
@@ -15,11 +15,28 @@ import { getEnabledProcessors, PAYMENT_PROCESSORS } from '../lib/payment-process
 import { DemoReviewSettings } from '../components/DemoReviewSettings'
 import { ClientRoomSettings } from '../components/ClientRoomSettings'
 import { DemoProjectDropzone } from '../components/DemoProjectDropzone'
-import { INDUSTRY_LIST } from '../lib/industries'
+import { INDUSTRY_CATEGORIES, industriesByCategory, type IndustryCategory } from '../lib/industries'
 
 export default function SettingsPage() {
   const { state, updateProfile, importData, resetAll } = useStore()
   const { industryId, setIndustry } = useIndustry()
+  const [industryQuery, setIndustryQuery] = useState('')
+  const grouped = useMemo(() => industriesByCategory(), [])
+  const filteredGroups = useMemo(() => {
+    const q = industryQuery.trim().toLowerCase()
+    if (!q) return grouped
+    const result = {} as Record<IndustryCategory, typeof grouped.general>
+    for (const [cat, list] of Object.entries(grouped) as [IndustryCategory, typeof grouped.general][]) {
+      const matches = list.filter(
+        (i) =>
+          i.label.toLowerCase().includes(q) ||
+          i.shortLabel.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q),
+      )
+      if (matches.length) result[cat] = matches
+    }
+    return result
+  }, [grouped, industryQuery])
   const fileRef = useRef<HTMLInputElement>(null)
   const { profile } = state
 
@@ -65,7 +82,7 @@ export default function SettingsPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="lg:col-span-2">
           <div className="px-6 py-4 border-b border-surface-100">
             <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
               <Layers size={16} /> Industry & workspace
@@ -74,26 +91,48 @@ export default function SettingsPage() {
               Tailors navigation, labels, dashboard, and welcome experience
             </p>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-2">
-              {INDUSTRY_LIST.map((industry) => {
-                const Icon = industry.icon
-                const selected = industryId === industry.id
+          <div className="p-6 space-y-4">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+              <input
+                type="search"
+                value={industryQuery}
+                onChange={(e) => setIndustryQuery(e.target.value)}
+                placeholder="Search industries…"
+                className="w-full rounded-lg border border-surface-200 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none"
+              />
+            </div>
+            <div className="max-h-96 overflow-y-auto space-y-5 pr-1">
+              {(Object.keys(INDUSTRY_CATEGORIES) as IndustryCategory[]).map((cat) => {
+                const list = filteredGroups[cat]
+                if (!list?.length) return null
                 return (
-                  <button
-                    key={industry.id}
-                    type="button"
-                    onClick={() => setIndustry(industry.id)}
-                    className={`rounded-xl border p-3 text-left transition-all ${
-                      selected
-                        ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500/30'
-                        : 'border-surface-200 hover:border-surface-300 hover:bg-surface-50'
-                    }`}
-                  >
-                    <Icon size={18} className={selected ? 'text-brand-600' : 'text-surface-400'} />
-                    <p className="mt-2 text-sm font-medium text-surface-900">{industry.shortLabel}</p>
-                    <p className="text-[11px] text-surface-500 mt-0.5 line-clamp-2">{industry.description}</p>
-                  </button>
+                  <div key={cat}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-surface-400 mb-2">
+                      {INDUSTRY_CATEGORIES[cat]}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {list.map((industry) => {
+                        const Icon = industry.icon
+                        const selected = industryId === industry.id
+                        return (
+                          <button
+                            key={industry.id}
+                            type="button"
+                            onClick={() => setIndustry(industry.id)}
+                            className={`rounded-xl border p-3 text-left transition-all ${
+                              selected
+                                ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500/30'
+                                : 'border-surface-200 hover:border-surface-300 hover:bg-surface-50'
+                            }`}
+                          >
+                            <Icon size={18} className={selected ? 'text-brand-600' : 'text-surface-400'} />
+                            <p className="mt-2 text-sm font-medium text-surface-900">{industry.shortLabel}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 )
               })}
             </div>

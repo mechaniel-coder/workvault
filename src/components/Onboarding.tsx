@@ -113,7 +113,7 @@ export function Onboarding() {
               <p className="text-white/50 text-sm mb-5">
                 We&apos;ll tailor navigation, labels, and your dashboard for your trade.
               </p>
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto pr-1">
                 {INDUSTRY_LIST.map((industry) => {
                   const Icon = industry.icon
                   const selected = industryId === industry.id

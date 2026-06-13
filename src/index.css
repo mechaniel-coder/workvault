@@ -229,3 +229,250 @@ html[data-industry="marketing"] {
   --color-brand-800: #86198f;
   --color-brand-900: #701a75;
 }
+
+html[data-industry="legal"] {
+  --color-brand-50: #f8fafc;
+  --color-brand-100: #f1f5f9;
+  --color-brand-200: #e2e8f0;
+  --color-brand-300: #94a3b8;
+  --color-brand-400: #64748b;
+  --color-brand-500: #475569;
+  --color-brand-600: #334155;
+  --color-brand-700: #1e293b;
+  --color-brand-800: #0f172a;
+  --color-brand-900: #020617;
+}
+
+html[data-industry="healthcare"] {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+}
+
+html[data-industry="photography"] {
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #ffe4e6;
+  --color-brand-200: #fecdd3;
+  --color-brand-300: #fda4af;
+  --color-brand-400: #fb7185;
+  --color-brand-500: #f43f5e;
+  --color-brand-600: #e11d48;
+  --color-brand-700: #be123c;
+  --color-brand-800: #9f1239;
+  --color-brand-900: #881337;
+}
+
+html[data-industry="writing"] {
+  --color-brand-50: #fafaf9;
+  --color-brand-100: #f5f5f4;
+  --color-brand-200: #e7e5e4;
+  --color-brand-300: #d6d3d1;
+  --color-brand-400: #a8a29e;
+  --color-brand-500: #78716c;
+  --color-brand-600: #57534e;
+  --color-brand-700: #44403c;
+  --color-brand-800: #292524;
+  --color-brand-900: #1c1917;
+}
+
+html[data-industry="real-estate"] {
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+}
+
+html[data-industry="education"] {
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+}
+
+html[data-industry="accounting"] {
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+}
+
+html[data-industry="events"] {
+  --color-brand-50: #fdf2f8;
+  --color-brand-100: #fce7f3;
+  --color-brand-200: #fbcfe8;
+  --color-brand-300: #f9a8d4;
+  --color-brand-400: #f472b6;
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+  --color-brand-700: #be185d;
+  --color-brand-800: #9d174d;
+  --color-brand-900: #831843;
+}
+
+html[data-industry="nonprofit"] {
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fee2e2;
+  --color-brand-200: #fecaca;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #ef4444;
+  --color-brand-600: #dc2626;
+  --color-brand-700: #b91c1c;
+  --color-brand-800: #991b1b;
+  --color-brand-900: #7f1d1d;
+}
+
+html[data-industry="fitness"] {
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+}
+
+html[data-industry="architecture"] {
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+}
+
+html[data-industry="music"] {
+  --color-brand-50: #faf5ff;
+  --color-brand-100: #f3e8ff;
+  --color-brand-200: #e9d5ff;
+  --color-brand-300: #d8b4fe;
+  --color-brand-400: #c084fc;
+  --color-brand-500: #a855f7;
+  --color-brand-600: #9333ea;
+  --color-brand-700: #7e22ce;
+  --color-brand-800: #6b21a8;
+  --color-brand-900: #581c87;
+}
+
+html[data-industry="culinary"] {
+  --color-brand-50: #fffbeb;
+  --color-brand-100: #fef3c7;
+  --color-brand-200: #fde68a;
+  --color-brand-300: #fcd34d;
+  --color-brand-400: #fbbf24;
+  --color-brand-500: #f59e0b;
+  --color-brand-600: #d97706;
+  --color-brand-700: #b45309;
+  --color-brand-800: #92400e;
+  --color-brand-900: #78350f;
+}
+
+html[data-industry="translation"] {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+}
+
+html[data-industry="research"] {
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #cffafe;
+  --color-brand-200: #a5f3fc;
+  --color-brand-300: #67e8f9;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-brand-700: #0e7490;
+  --color-brand-800: #155e75;
+  --color-brand-900: #164e63;
+}
+
+html[data-industry="cleaning"] {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+}
+
+html[data-industry="automotive"] {
+  --color-brand-50: #f4f4f5;
+  --color-brand-100: #e4e4e7;
+  --color-brand-200: #d4d4d8;
+  --color-brand-300: #a1a1aa;
+  --color-brand-400: #71717a;
+  --color-brand-500: #52525b;
+  --color-brand-600: #3f3f46;
+  --color-brand-700: #27272a;
+  --color-brand-800: #18181b;
+  --color-brand-900: #09090b;
+}
+
+html[data-industry="pet-services"] {
+  --color-brand-50: #f7fee7;
+  --color-brand-100: #ecfccb;
+  --color-brand-200: #d9f99d;
+  --color-brand-300: #bef264;
+  --color-brand-400: #a3e635;
+  --color-brand-500: #84cc16;
+  --color-brand-600: #65a30d;
+  --color-brand-700: #4d7c0f;
+  --color-brand-800: #3f6212;
+  --color-brand-900: #365314;
+}
+
+html[data-industry="insurance"] { --color-brand-50: #eff6ff; --color-brand-100: #dbeafe; --color-brand-200: #bfdbfe; --color-brand-300: #93c5fd; --color-brand-400: #60a5fa; --color-brand-500: #3b82f6; --color-brand-600: #1d4ed8; --color-brand-700: #1e40af; --color-brand-800: #1e3a8a; --color-brand-900: #172554; }
+html[data-industry="fashion"] { --color-brand-50: #fdf2f8; --color-brand-100: #fce7f3; --color-brand-200: #fbcfe8; --color-brand-300: #f9a8d4; --color-brand-400: #f472b6; --color-brand-500: #ec4899; --color-brand-600: #db2777; --color-brand-700: #be185d; --color-brand-800: #9d174d; --color-brand-900: #831843; }
+html[data-industry="beauty"] { --color-brand-50: #fff1f2; --color-brand-100: #ffe4e6; --color-brand-200: #fecdd3; --color-brand-300: #fda4af; --color-brand-400: #fb7185; --color-brand-500: #f43f5e; --color-brand-600: #e11d48; --color-brand-700: #be123c; --color-brand-800: #9f1239; --color-brand-900: #881337; }
+html[data-industry="security"] { --color-brand-50: #f8fafc; --color-brand-100: #f1f5f9; --color-brand-200: #e2e8f0; --color-brand-300: #94a3b8; --color-brand-400: #64748b; --color-brand-500: #475569; --color-brand-600: #334155; --color-brand-700: #1e293b; --color-brand-800: #0f172a; --color-brand-900: #020617; }
+html[data-industry="landscaping"] { --color-brand-50: #f0fdf4; --color-brand-100: #dcfce7; --color-brand-200: #bbf7d0; --color-brand-300: #86efac; --color-brand-400: #4ade80; --color-brand-500: #22c55e; --color-brand-600: #16a34a; --color-brand-700: #15803d; --color-brand-800: #166534; --color-brand-900: #14532d; }
+html[data-industry="childcare"] { --color-brand-50: #fdf4ff; --color-brand-100: #fae8ff; --color-brand-200: #f5d0fe; --color-brand-300: #e879f9; --color-brand-400: #d946ef; --color-brand-500: #c026d3; --color-brand-600: #a21caf; --color-brand-700: #86198f; --color-brand-800: #701a75; --color-brand-900: #581c87; }
+html[data-industry="logistics"] { --color-brand-50: #fefce8; --color-brand-100: #fef9c3; --color-brand-200: #fef08a; --color-brand-300: #fde047; --color-brand-400: #facc15; --color-brand-500: #eab308; --color-brand-600: #ca8a04; --color-brand-700: #a16207; --color-brand-800: #854d0e; --color-brand-900: #713f12; }
+html[data-industry="solar"] { --color-brand-50: #fffbeb; --color-brand-100: #fef3c7; --color-brand-200: #fde68a; --color-brand-300: #fcd34d; --color-brand-400: #fbbf24; --color-brand-500: #f59e0b; --color-brand-600: #d97706; --color-brand-700: #b45309; --color-brand-800: #92400e; --color-brand-900: #78350f; }
+html[data-industry="film"] { --color-brand-50: #faf5ff; --color-brand-100: #f3e8ff; --color-brand-200: #e9d5ff; --color-brand-300: #d8b4fe; --color-brand-400: #c084fc; --color-brand-500: #a855f7; --color-brand-600: #9333ea; --color-brand-700: #7e22ce; --color-brand-800: #6b21a8; --color-brand-900: #581c87; }
+html[data-industry="aviation"] { --color-brand-50: #ecfeff; --color-brand-100: #cffafe; --color-brand-200: #a5f3fc; --color-brand-300: #67e8f9; --color-brand-400: #22d3ee; --color-brand-500: #06b6d4; --color-brand-600: #0891b2; --color-brand-700: #0e7490; --color-brand-800: #155e75; --color-brand-900: #164e63; }
+html[data-industry="printing"] { --color-brand-50: #f5f5f4; --color-brand-100: #e7e5e4; --color-brand-200: #d6d3d1; --color-brand-300: #a8a29e; --color-brand-400: #78716c; --color-brand-500: #57534e; --color-brand-600: #44403c; --color-brand-700: #292524; --color-brand-800: #1c1917; --color-brand-900: #0c0a09; }
+html[data-industry="property-management"] { --color-brand-50: #f0f9ff; --color-brand-100: #e0f2fe; --color-brand-200: #bae6fd; --color-brand-300: #7dd3fc; --color-brand-400: #38bdf8; --color-brand-500: #0ea5e9; --color-brand-600: #0284c7; --color-brand-700: #0369a1; --color-brand-800: #075985; --color-brand-900: #0c4a6e; }
