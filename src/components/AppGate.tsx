@@ -1,30 +1,24 @@
-import { useState, useEffect, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../context/StoreContext'
 import { LoadingScreen } from './LoadingScreen'
-import { Onboarding, isOnboardingComplete } from './Onboarding'
-
-type AppPhase = 'loading' | 'onboarding' | 'ready'
+import { Onboarding } from './Onboarding'
 
 export function AppGate({ children }: { children: ReactNode }) {
   const { loading: authLoading } = useAuth()
-  const { state } = useStore()
-  const [phase, setPhase] = useState<AppPhase>('loading')
-  const [loadingDone, setLoadingDone] = useState(false)
+  const { state, storageReady } = useStore()
 
-  useEffect(() => {
-    if (loadingDone && !authLoading) {
-      const needsOnboarding = !isOnboardingComplete() && !state.profile.name
-      setPhase(needsOnboarding ? 'onboarding' : 'ready')
-    }
-  }, [loadingDone, authLoading, state.profile.name])
+  const setupDone = Boolean(
+    state.syncMeta.setupComplete || state.profile.name?.trim(),
+  )
 
-  if (phase === 'loading') {
-    return <LoadingScreen onComplete={() => setLoadingDone(true)} />
+  if (!storageReady || authLoading) {
+    if (setupDone) return null
+    return <LoadingScreen onComplete={() => {}} minDuration={600} />
   }
 
-  if (phase === 'onboarding') {
-    return <Onboarding onComplete={() => setPhase('ready')} />
+  if (!setupDone) {
+    return <Onboarding />
   }
 
   return <>{children}</>

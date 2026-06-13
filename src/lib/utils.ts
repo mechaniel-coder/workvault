@@ -7,6 +7,7 @@ import {
   DEFAULT_CLOUD_STORAGE_META, DEFAULT_CLIENT_APP_LIFECYCLE,
 } from './types'
 import { defaultSubcontractorTaxFields } from './tax-1099'
+import { migrateBrowserStateToDisk, readStateJson, writeStateJson } from './storage'
 
 const STORAGE_KEY = 'workvault-state'
 
@@ -50,7 +51,7 @@ export function createInitialState(): AppState {
     gmailInboxCache: [],
     cloudStorageMeta: { ...DEFAULT_CLOUD_STORAGE_META },
     activeTimer: null,
-    syncMeta: { lastSyncedAt: null, autoSync: false },
+    syncMeta: { lastSyncedAt: null, autoSync: false, setupComplete: false },
     demoSettings: { ...DEFAULT_DEMO_SETTINGS },
     teamMembers: [],
     clientGuestInvites: [],
@@ -58,146 +59,177 @@ export function createInitialState(): AppState {
   }
 }
 
+export function parseAppState(raw: string): AppState {
+  const parsed = JSON.parse(raw) as AppState
+  return {
+    ...createInitialState(),
+    ...parsed,
+    profile: {
+      ...DEFAULT_PROFILE,
+      ...parsed.profile,
+      paymentMethods: parsed.profile?.paymentMethods || [],
+      defaultPaymentInstructions: parsed.profile?.defaultPaymentInstructions || '',
+    },
+    syncMeta: {
+      ...createInitialState().syncMeta,
+      ...parsed.syncMeta,
+      setupComplete: Boolean(
+        parsed.syncMeta?.setupComplete
+        || parsed.profile?.name?.trim()
+        || (typeof localStorage !== 'undefined' && localStorage.getItem('workvault-onboarded') === 'true'),
+      ),
+    },
+    contracts: (parsed.contracts || []).map((c: Contract) => ({
+      ...c,
+      signatures: c.signatures || [],
+      signingToken: c.signingToken ?? null,
+      docusignEnvelopeId: c.docusignEnvelopeId ?? null,
+      docusignSigningUrl: c.docusignSigningUrl ?? null,
+      clientFileAccess: c.clientFileAccess ?? 'none',
+    })),
+    invoices: (parsed.invoices || []).map((inv) => ({
+      ...inv,
+      paymentMethodIds: inv.paymentMethodIds || [],
+      paymentInstructions: inv.paymentInstructions || '',
+      stripeCheckoutUrl: inv.stripeCheckoutUrl ?? null,
+      stripeSessionId: inv.stripeSessionId ?? null,
+      paymentLinks: inv.paymentLinks || (
+        inv.stripeCheckoutUrl
+          ? [{
+            processor: 'stripe' as const,
+            url: inv.stripeCheckoutUrl,
+            externalId: inv.stripeSessionId ?? null,
+            createdAt: inv.sentAt || inv.createdAt,
+          }]
+          : []
+      ),
+    })),
+    clients: (parsed.clients || []).map((c) => ({
+      ...c,
+      portalToken: c.portalToken ?? null,
+      clientAppToken: c.clientAppToken ?? null,
+      appLifecycle: {
+        ...DEFAULT_CLIENT_APP_LIFECYCLE,
+        ...c.appLifecycle,
+      },
+    })),
+    projects: parsed.projects || [],
+    timeEntries: (parsed.timeEntries || []).map((e) => ({
+      ...e,
+      source: e.source || 'manual',
+      externalId: e.externalId ?? null,
+    })),
+    proposals: parsed.proposals || [],
+    expenses: parsed.expenses || [],
+    recurringInvoices: parsed.recurringInvoices || [],
+    scopeEntries: parsed.scopeEntries || [],
+    vaultDocuments: parsed.vaultDocuments || [],
+    subcontractors: (parsed.subcontractors || []).map((s) => ({
+      ...defaultSubcontractorTaxFields(),
+      ...s,
+      w9OnFile: s.w9OnFile ?? false,
+      w9ReceivedAt: s.w9ReceivedAt ?? null,
+      requires1099: s.requires1099 ?? true,
+      entityType: s.entityType ?? 'individual',
+    })),
+    subcontractorPayments: parsed.subcontractorPayments || [],
+    form1099Records: parsed.form1099Records || [],
+    tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS, ...parsed.tax1099Settings },
+    emailTemplates: parsed.emailTemplates?.length ? parsed.emailTemplates : seedEmailTemplates(),
+    availabilityBlocks: parsed.availabilityBlocks || [],
+    milestones: parsed.milestones || [],
+    taxSettings: { ...DEFAULT_TAX_SETTINGS, ...parsed.taxSettings },
+    integrations: { ...DEFAULT_INTEGRATIONS, ...parsed.integrations },
+    integrationCredentials: {
+      ...DEFAULT_INTEGRATION_CREDENTIALS,
+      ...parsed.integrationCredentials,
+      emailFrom: parsed.integrationCredentials?.emailFrom || parsed.profile?.email || '',
+      emailFromName: parsed.integrationCredentials?.emailFromName || parsed.profile?.name || '',
+    },
+    calendarSyncMeta: {
+      ...DEFAULT_CALENDAR_SYNC_META,
+      ...parsed.calendarSyncMeta,
+      eventMap: parsed.calendarSyncMeta?.eventMap || {},
+    },
+    bookkeepingSyncMeta: {
+      ...DEFAULT_BOOKKEEPING_SYNC_META,
+      ...parsed.bookkeepingSyncMeta,
+      quickbooksCustomerMap: parsed.bookkeepingSyncMeta?.quickbooksCustomerMap || {},
+      quickbooksInvoiceMap: parsed.bookkeepingSyncMeta?.quickbooksInvoiceMap || {},
+      quickbooksExpenseMap: parsed.bookkeepingSyncMeta?.quickbooksExpenseMap || {},
+      xeroContactMap: parsed.bookkeepingSyncMeta?.xeroContactMap || {},
+      xeroInvoiceMap: parsed.bookkeepingSyncMeta?.xeroInvoiceMap || {},
+      xeroExpenseMap: parsed.bookkeepingSyncMeta?.xeroExpenseMap || {},
+    },
+    schedulingMeta: { ...DEFAULT_SCHEDULING_META, ...parsed.schedulingMeta },
+    plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META, ...parsed.plaidSyncMeta },
+    bankTransactions: parsed.bankTransactions || [],
+    gmailInboxCache: parsed.gmailInboxCache || [],
+    cloudStorageMeta: {
+      ...DEFAULT_CLOUD_STORAGE_META,
+      ...parsed.cloudStorageMeta,
+      projectFolders: parsed.cloudStorageMeta?.projectFolders || [],
+      fileCache: parsed.cloudStorageMeta?.fileCache || {},
+    },
+    demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
+      uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
+      allowDownloads: parsed.demoSettings?.allowDownloads ?? false,
+      clientRoom: { ...DEFAULT_CLIENT_ROOM_CONFIG, ...parsed.demoSettings?.clientRoom,
+        checklist: parsed.demoSettings?.clientRoom?.checklist || [],
+        milestones: parsed.demoSettings?.clientRoom?.milestones || [],
+        availabilitySlots: parsed.demoSettings?.clientRoom?.availabilitySlots || [],
+      },
+      projectTransfer: {
+        ...DEFAULT_DEMO_PROJECT_TRANSFER,
+        ...parsed.demoSettings?.projectTransfer,
+        deliverables: parsed.demoSettings?.projectTransfer?.deliverables || [],
+      },
+    },
+    teamMembers: (parsed.teamMembers || []).map((m) => ({
+      ...m,
+      cursorCliAccess: m.cursorCliAccess ?? false,
+    })),
+    clientGuestInvites: parsed.clientGuestInvites || [],
+    cursorCli: {
+      settings: { ...DEFAULT_CURSOR_CLI.settings, ...parsed.cursorCli?.settings },
+      workflows: parsed.cursorCli?.workflows?.length
+        ? parsed.cursorCli.workflows
+        : DEFAULT_CURSOR_CLI.workflows,
+    },
+  }
+}
+
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return createInitialState()
-    const parsed = JSON.parse(raw) as AppState
-    return {
-      ...createInitialState(),
-      ...parsed,
-      profile: {
-        ...DEFAULT_PROFILE,
-        ...parsed.profile,
-        paymentMethods: parsed.profile?.paymentMethods || [],
-        defaultPaymentInstructions: parsed.profile?.defaultPaymentInstructions || '',
-      },
-      syncMeta: { ...createInitialState().syncMeta, ...parsed.syncMeta },
-      contracts: (parsed.contracts || []).map((c: Contract) => ({
-        ...c,
-        signatures: c.signatures || [],
-        signingToken: c.signingToken ?? null,
-        docusignEnvelopeId: c.docusignEnvelopeId ?? null,
-        docusignSigningUrl: c.docusignSigningUrl ?? null,
-        clientFileAccess: c.clientFileAccess ?? 'none',
-      })),
-      invoices: (parsed.invoices || []).map((inv) => ({
-        ...inv,
-        paymentMethodIds: inv.paymentMethodIds || [],
-        paymentInstructions: inv.paymentInstructions || '',
-        stripeCheckoutUrl: inv.stripeCheckoutUrl ?? null,
-        stripeSessionId: inv.stripeSessionId ?? null,
-        paymentLinks: inv.paymentLinks || (
-          inv.stripeCheckoutUrl
-            ? [{
-              processor: 'stripe' as const,
-              url: inv.stripeCheckoutUrl,
-              externalId: inv.stripeSessionId ?? null,
-              createdAt: inv.sentAt || inv.createdAt,
-            }]
-            : []
-        ),
-      })),
-      clients: (parsed.clients || []).map((c) => ({
-        ...c,
-        portalToken: c.portalToken ?? null,
-        clientAppToken: c.clientAppToken ?? null,
-        appLifecycle: {
-          ...DEFAULT_CLIENT_APP_LIFECYCLE,
-          ...c.appLifecycle,
-        },
-      })),
-      projects: parsed.projects || [],
-      timeEntries: (parsed.timeEntries || []).map((e) => ({
-        ...e,
-        source: e.source || 'manual',
-        externalId: e.externalId ?? null,
-      })),
-      proposals: parsed.proposals || [],
-      expenses: parsed.expenses || [],
-      recurringInvoices: parsed.recurringInvoices || [],
-      scopeEntries: parsed.scopeEntries || [],
-      vaultDocuments: parsed.vaultDocuments || [],
-      subcontractors: (parsed.subcontractors || []).map((s) => ({
-        ...defaultSubcontractorTaxFields(),
-        ...s,
-        w9OnFile: s.w9OnFile ?? false,
-        w9ReceivedAt: s.w9ReceivedAt ?? null,
-        requires1099: s.requires1099 ?? true,
-        entityType: s.entityType ?? 'individual',
-      })),
-      subcontractorPayments: parsed.subcontractorPayments || [],
-      form1099Records: parsed.form1099Records || [],
-      tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS, ...parsed.tax1099Settings },
-      emailTemplates: parsed.emailTemplates?.length ? parsed.emailTemplates : seedEmailTemplates(),
-      availabilityBlocks: parsed.availabilityBlocks || [],
-      milestones: parsed.milestones || [],
-      taxSettings: { ...DEFAULT_TAX_SETTINGS, ...parsed.taxSettings },
-      integrations: { ...DEFAULT_INTEGRATIONS, ...parsed.integrations },
-      integrationCredentials: {
-        ...DEFAULT_INTEGRATION_CREDENTIALS,
-        ...parsed.integrationCredentials,
-        emailFrom: parsed.integrationCredentials?.emailFrom || parsed.profile?.email || '',
-        emailFromName: parsed.integrationCredentials?.emailFromName || parsed.profile?.name || '',
-      },
-      calendarSyncMeta: {
-        ...DEFAULT_CALENDAR_SYNC_META,
-        ...parsed.calendarSyncMeta,
-        eventMap: parsed.calendarSyncMeta?.eventMap || {},
-      },
-      bookkeepingSyncMeta: {
-        ...DEFAULT_BOOKKEEPING_SYNC_META,
-        ...parsed.bookkeepingSyncMeta,
-        quickbooksCustomerMap: parsed.bookkeepingSyncMeta?.quickbooksCustomerMap || {},
-        quickbooksInvoiceMap: parsed.bookkeepingSyncMeta?.quickbooksInvoiceMap || {},
-        quickbooksExpenseMap: parsed.bookkeepingSyncMeta?.quickbooksExpenseMap || {},
-        xeroContactMap: parsed.bookkeepingSyncMeta?.xeroContactMap || {},
-        xeroInvoiceMap: parsed.bookkeepingSyncMeta?.xeroInvoiceMap || {},
-        xeroExpenseMap: parsed.bookkeepingSyncMeta?.xeroExpenseMap || {},
-      },
-      schedulingMeta: { ...DEFAULT_SCHEDULING_META, ...parsed.schedulingMeta },
-      plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META, ...parsed.plaidSyncMeta },
-      bankTransactions: parsed.bankTransactions || [],
-      gmailInboxCache: parsed.gmailInboxCache || [],
-      cloudStorageMeta: {
-        ...DEFAULT_CLOUD_STORAGE_META,
-        ...parsed.cloudStorageMeta,
-        projectFolders: parsed.cloudStorageMeta?.projectFolders || [],
-        fileCache: parsed.cloudStorageMeta?.fileCache || {},
-      },
-      demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
-        uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
-        allowDownloads: parsed.demoSettings?.allowDownloads ?? false,
-        clientRoom: { ...DEFAULT_CLIENT_ROOM_CONFIG, ...parsed.demoSettings?.clientRoom,
-          checklist: parsed.demoSettings?.clientRoom?.checklist || [],
-          milestones: parsed.demoSettings?.clientRoom?.milestones || [],
-          availabilitySlots: parsed.demoSettings?.clientRoom?.availabilitySlots || [],
-        },
-        projectTransfer: {
-          ...DEFAULT_DEMO_PROJECT_TRANSFER,
-          ...parsed.demoSettings?.projectTransfer,
-          deliverables: parsed.demoSettings?.projectTransfer?.deliverables || [],
-        },
-      },
-      teamMembers: (parsed.teamMembers || []).map((m) => ({
-        ...m,
-        cursorCliAccess: m.cursorCliAccess ?? false,
-      })),
-      clientGuestInvites: parsed.clientGuestInvites || [],
-      cursorCli: {
-        settings: { ...DEFAULT_CURSOR_CLI.settings, ...parsed.cursorCli?.settings },
-        workflows: parsed.cursorCli?.workflows?.length
-          ? parsed.cursorCli.workflows
-          : DEFAULT_CURSOR_CLI.workflows,
-      },
-    }
+    return parseAppState(raw)
+  } catch {
+    return createInitialState()
+  }
+}
+
+export async function loadStateAsync(): Promise<AppState> {
+  try {
+    await migrateBrowserStateToDisk()
+    const raw = await readStateJson()
+    if (!raw) return createInitialState()
+    return parseAppState(raw)
   } catch {
     return createInitialState()
   }
 }
 
 export function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  const json = JSON.stringify(state)
+  void writeStateJson(json)
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY, json)
+    } catch {
+      // desktop primary store is on disk
+    }
+  }
 }
 
 export function exportAllData(state: AppState): string {

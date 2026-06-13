@@ -1,15 +1,23 @@
 {
   "name": "workvault",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:desktop": "VITE_DESKTOP=1 vite",
     "build": "tsc -b && vite build",
+    "build:desktop": "VITE_DESKTOP=1 tsc -b && VITE_DESKTOP=1 vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "installer": "npm run tauri:build"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-fs": "^2.4.5",
     "@netlify/blobs": "^10.7.9",
     "@netlify/functions": "^5.3.0",
     "@netlify/identity": "^1.2.0",
@@ -24,6 +32,7 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^24.12.3",

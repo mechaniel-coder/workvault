@@ -1,4 +1,5 @@
 import type { AppState, Client, ClientAppSessionPublic } from './types'
+import { apiFetch } from './api-client'
 import { buildClientAppSession } from './client-app-state'
 import { publishClientRoomConfig } from './client-room'
 import { downloadClientWorkspaceBundle } from './client-app-bundle'
@@ -51,7 +52,7 @@ export function validateLocalClientAppToken(token: string, state: AppState): Cli
 
 export async function fetchClientAppSession(token: string): Promise<ClientAppSessionPublic | null> {
   try {
-    const res = await fetch(`/api/client-app/${token}`)
+    const res = await apiFetch(`/api/client-app/${token}`)
     if (!res.ok) return null
     return (await res.json()) as ClientAppSessionPublic
   } catch {
@@ -115,7 +116,7 @@ export async function publishClientApp(
 
   let remoteOk = false
   try {
-    const res = await fetch(`/api/client-app/${token}`, {
+    const res = await apiFetch(`/api/client-app/${token}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(session),

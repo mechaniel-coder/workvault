@@ -419,7 +419,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
     form1099Records: [],
     tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },
     activeTimer: null,
-    syncMeta: { lastSyncedAt: null, autoSync: false },
+    syncMeta: { lastSyncedAt: null, autoSync: false, setupComplete: false },
     demoSettings: {
       enabled: false,
       token: null,

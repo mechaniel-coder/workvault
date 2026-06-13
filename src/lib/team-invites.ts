@@ -1,4 +1,5 @@
 import type { TeamMember, TeamMemberRole } from './types'
+import { apiFetch } from './api-client'
 
 export const TEAM_ROLE_OPTIONS: { value: TeamMemberRole; label: string; description: string }[] = [
   { value: 'owner', label: 'Owner', description: 'Full access — business owner or lead contractor.' },
@@ -35,7 +36,7 @@ export async function publishTeamInvite(member: TeamMember, profile: { name: str
   if (!member.inviteToken) return false
   saveLocalTeamInvite(member, profile)
   try {
-    const res = await fetch(`/api/team-invite/${member.inviteToken}`, {
+    const res = await apiFetch(`/api/team-invite/${member.inviteToken}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ member, profile }),
@@ -48,7 +49,7 @@ export async function publishTeamInvite(member: TeamMember, profile: { name: str
 
 export async function fetchTeamInvite(token: string): Promise<{ member: TeamMember; profile: { name: string; email: string } } | null> {
   try {
-    const res = await fetch(`/api/team-invite/${token}`)
+    const res = await apiFetch(`/api/team-invite/${token}`)
     if (!res.ok) return null
     return (await res.json()) as { member: TeamMember; profile: { name: string; email: string } }
   } catch {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from '../lib/api-client'
 import { useParams } from 'react-router-dom'
 import { FileText, CheckCircle, Shield } from 'lucide-react'
 import { SignaturePad, SignatureDisplay } from '../components/SignaturePad'
@@ -31,7 +32,7 @@ export default function SignContractPage() {
 
   useEffect(() => {
     if (!token) return
-    fetch(`/api/sign/${token}`)
+    apiFetch(`/api/sign/${token}`)
       .then((res) => {
         if (!res.ok) throw new Error('Contract not found or link expired')
         return res.json()
@@ -49,7 +50,7 @@ export default function SignContractPage() {
     if (!token || !signatureImage || !signerName.trim()) return
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/sign/${token}`, {
+      const res = await apiFetch(`/api/sign/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: signerName, signatureImage }),

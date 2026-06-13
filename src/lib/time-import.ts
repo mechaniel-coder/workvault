@@ -1,4 +1,5 @@
 import type { AppState, IntegrationCredentials, TimeEntry } from './types'
+import { apiFetch } from './api-client'
 
 export type ImportedTimeEntry = {
   externalId: string
@@ -13,7 +14,7 @@ export type ImportedTimeEntry = {
 }
 
 export async function importFromToggl(credentials: IntegrationCredentials, since?: string) {
-  const res = await fetch('/api/toggl/import', {
+  const res = await apiFetch('/api/toggl/import', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -28,7 +29,7 @@ export async function importFromToggl(credentials: IntegrationCredentials, since
 }
 
 export async function importFromHarvest(credentials: IntegrationCredentials, from?: string, to?: string) {
-  const res = await fetch('/api/harvest/import', {
+  const res = await apiFetch('/api/harvest/import', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

@@ -1,6 +1,7 @@
 import type {
   AppState, Client, ClientAppCloseOutcome, ClientAppClosureRecord, ClientAppSessionPublic,
 } from './types'
+import { apiFetch } from './api-client'
 import {
   collectClientDeliverableLinks, closureMessage, downloadClientArchive,
 } from './client-closure'
@@ -154,7 +155,7 @@ export async function closeClientApp(
   clearLocalClientData(token)
 
   try {
-    await fetch(`/api/client-app/${token}`, {
+    await apiFetch(`/api/client-app/${token}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(tombstone),
@@ -165,7 +166,7 @@ export async function closeClientApp(
 
   for (const invite of state.clientGuestInvites.filter((g) => g.clientAppToken === token)) {
     try {
-      await fetch('/api/guest-invite', {
+      await apiFetch('/api/guest-invite', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...invite, enabled: false }),

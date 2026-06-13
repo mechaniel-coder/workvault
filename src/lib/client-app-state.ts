@@ -73,7 +73,7 @@ export function buildClientAppState(clientId: string, state: AppState): AppState
     taxSettings: { ...DEFAULT_TAX_SETTINGS },
     integrations: { ...DEFAULT_INTEGRATIONS },
     activeTimer: null,
-    syncMeta: { lastSyncedAt: null, autoSync: false },
+    syncMeta: { lastSyncedAt: null, autoSync: false, setupComplete: false },
     demoSettings: {
       ...DEFAULT_DEMO_SETTINGS,
       enabled: true,
