@@ -11,7 +11,6 @@
 
 <p align="center">
   <a href="https://github.com/mechaniel-coder/workvault/releases/latest"><img src="https://img.shields.io/github/v/release/mechaniel-coder/workvault?label=Download%20Desktop&color=4f46e5" alt="Latest release" /></a>
-  <a href="https://github.com/mechaniel-coder/workvault/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mechaniel-coder/workvault/ci.yml?label=CI" alt="CI" /></a>
   <a href="https://workvault.netlify.app"><img src="https://img.shields.io/badge/web-PWA%20%26%20mobile-38bdf8" alt="Web app" /></a>
 </p>
 
@@ -180,33 +179,33 @@ flowchart LR
 
 ## For developers
 
+Source access is governed by [LICENSE](LICENSE). To request permission to clone or modify the codebase, [submit a license inquiry](https://github.com/mechaniel-coder/workvault/issues/new?template=license_inquiry.yml).
+
 ### Prerequisites
 
 - Node.js 20+
-- Rust ([rustup](https://rustup.rs)) — for desktop builds only
-- Xcode / Android Studio — for Capacitor store builds only
+- Rust ([rustup](https://rustup.rs)) — desktop builds
+- Xcode / Android Studio — Capacitor store builds
 
-### Web (Netlify)
+### Web
 
 ```bash
-git clone https://github.com/mechaniel-coder/workvault.git
-cd workvault
 npm install
 npm run dev          # local dev
 npm run build        # production build (includes PWA)
 ```
 
-Deploys automatically from `main` to [workvault.netlify.app](https://workvault.netlify.app) when connected in Netlify.
+Production web deploy: [workvault.netlify.app](https://workvault.netlify.app)
 
-### Desktop app
+### Desktop
 
 ```bash
 npm install
 npm run tauri:dev    # hot-reload desktop app
-npm run installer    # .dmg / .exe / .AppImage / .deb on your OS
+npm run installer    # build installer for your OS (.dmg / .exe / AppImage / .deb)
 ```
 
-### Mobile native (Capacitor)
+### Mobile (Capacitor)
 
 ```bash
 npm run build:mobile
@@ -215,16 +214,9 @@ npm run cap:sync
 npm run cap:ios      # or cap:android
 ```
 
-### Cut a release
+### Releases
 
-Push a version tag to build Mac, Windows, and Linux installers:
-
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
-
-If GitHub Actions fails to start, build locally on each OS and upload assets to the release manually.
+Official installers are published on [GitHub Releases](https://github.com/mechaniel-coder/workvault/releases). Tag pushes can trigger the release workflow when Actions is available.
 
 ---
 

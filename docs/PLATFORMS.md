@@ -6,16 +6,16 @@ WorkVault is **local-first**. The desktop app is the primary experience; web, mo
 
 | Platform | Status | How to get it |
 |----------|--------|---------------|
-| **macOS** (Apple Silicon) | ✅ Desktop | [GitHub Releases](https://github.com/mechaniel-coder/workvault/releases) `.dmg` |
-| **Windows** (x64) | ✅ Desktop | Releases `.exe` (NSIS) |
-| **Linux** (x64) | ✅ Desktop | Releases `.AppImage` / `.deb` |
-| **Mobile web / PWA** | ✅ | [workvault.netlify.app](https://workvault.netlify.app) → Install / Add to Home Screen |
-| **iOS / Android (stores)** | 🔧 Capacitor | Build locally (see below) |
-| **Self-hosted server** | 🔧 Docker | `deploy/docker-compose.yml` |
+| **macOS** (Apple Silicon) | Available | [GitHub Releases](https://github.com/mechaniel-coder/workvault/releases) `.dmg` |
+| **Windows** (x64) | Coming soon | Watch [Releases](https://github.com/mechaniel-coder/workvault/releases) |
+| **Linux** (x64) | Coming soon | Watch [Releases](https://github.com/mechaniel-coder/workvault/releases) |
+| **Mobile web / PWA** | Available | [workvault.netlify.app](https://workvault.netlify.app) → Install / Add to Home Screen |
+| **iOS / Android (stores)** | Capacitor | Build locally (see below) |
+| **Self-hosted server** | Docker | `deploy/docker-compose.yml` |
 
 ---
 
-## Phase 1–2: Desktop (Mac, Windows, Linux)
+## Desktop (Mac, Windows, Linux)
 
 ### End users
 
@@ -29,25 +29,20 @@ Download from [Releases](https://github.com/mechaniel-coder/workvault/releases/l
 
 ### Build locally
 
+Licensed developers with repository access:
+
 ```bash
 npm install
 npm run installer   # .dmg / .exe / .AppImage / .deb on your OS
 ```
 
-### CI releases
+### Release builds
 
-Push a version tag to trigger multi-OS builds:
-
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
-
-If GitHub Actions shows `startup_failure`, build on each OS locally and upload assets manually to the release.
+Official installers are uploaded to [GitHub Releases](https://github.com/mechaniel-coder/workvault/releases). Pushing a version tag can trigger multi-OS builds via GitHub Actions when enabled.
 
 ---
 
-## Phase 3: PWA (phones & tablets)
+## PWA (phones & tablets)
 
 1. Open [workvault.netlify.app](https://workvault.netlify.app) in Chrome (Android) or Safari (iOS).
 2. **Android:** tap **Install app** when prompted, or browser menu → Install.
@@ -59,11 +54,11 @@ Features:
 - Bottom navigation on small screens
 - Same localStorage data model as the web app
 
-Cloud features (sync, AI, integrations) still use Netlify APIs.
+Cloud features (sync, assistant, integrations) use Netlify APIs when online.
 
 ---
 
-## Phase 4: App Store / Play Store (Capacitor)
+## App Store / Play Store (Capacitor)
 
 Native shells wrap the same React build. API calls route to Netlify (or your self-hosted API).
 
@@ -82,74 +77,59 @@ npx cap add android  # once
 npm run cap:sync
 ```
 
-### Open native IDEs
+### Open in IDE
 
 ```bash
-npm run cap:ios       # Xcode
-npm run cap:android   # Android Studio
+npm run cap:ios      # opens Xcode
+npm run cap:android  # opens Android Studio
 ```
 
-### Store checklist
-
-- [ ] App icons & splash (from `src-tauri/icons/`)
-- [ ] Privacy policy URL
-- [ ] Sign in / cloud sync disclosure
-- [ ] TestFlight / internal testing track before public release
-
-Bundle IDs:
-
-- Desktop (Tauri): `com.workvault.desktop`
-- Mobile (Capacitor): `com.workvault.app`
+Store submission is manual — configure signing, icons, and privacy labels in each platform project after `cap sync`.
 
 ---
 
-## Phase 5: Self-hosted server
+## Self-host (Docker)
 
-Host the web UI on your own domain. API requests proxy to Netlify by default (hybrid mode). Full air-gapped API requires porting `netlify/functions/` — tracked as future work.
-
-### Quick start (Docker)
+Run a static build plus a small API proxy on your own infrastructure:
 
 ```bash
 cd deploy
-cp .env.example .env   # optional: set WORKVAULT_API_URL
 docker compose up -d --build
 ```
 
-Open `http://localhost:8080`.
-
-### Environment
-
-| Variable | Purpose |
-|----------|---------|
-| `PORT` | Host port (default `8080`) |
-| `WORKVAULT_API_URL` | Upstream for `/api/*` (default `https://workvault.netlify.app`) |
-| `VITE_API_BASE` | Build-time API origin baked into static assets (optional) |
-
-### Without Docker
-
-```bash
-npm run build
-cd deploy/server && npm install
-WORKVAULT_API_URL=https://workvault.netlify.app node index.mjs
-```
+Default port: **8080**. Set `NETLIFY_FUNCTIONS_URL` in `deploy/docker-compose.yml` if you proxy to your Netlify functions deployment.
 
 ---
 
-## API routing summary
+## Industry workspaces
 
-| Runtime | `/api/*` target |
-|---------|-----------------|
-| Netlify web | Same origin |
-| Desktop (Tauri) | `https://workvault.netlify.app` |
-| Capacitor native | `https://workvault.netlify.app` (or `VITE_API_BASE`) |
-| Self-host (Docker) | Proxied to `WORKVAULT_API_URL` |
-| Custom | Set `VITE_API_BASE` at build time |
+WorkVault ships **36 industry-tailored workspaces** (navigation, terminology, themes, welcome pages). Browse them at:
+
+**https://workvault.netlify.app/welcome**
+
+Each industry adapts the dashboard, onboarding picker, and public landing page without changing the underlying data model.
 
 ---
 
-## Recommended daily workflow
+## API & integrations
 
-1. **Contractors:** WorkVault desktop app (Mac/Win/Linux)
-2. **Clients:** Hosted link or `.workvault` file import
-3. **On the go:** PWA or Capacitor app
-4. **Your infra:** Self-host frontend + optional API upstream
+| Feature | Where it runs |
+|---------|---------------|
+| Auth & sync | Netlify Identity + Blobs |
+| Payments | Stripe / Square / PayPal functions |
+| OAuth | Google, Dropbox, Slack, etc. |
+| Assistant | Netlify AI Gateway |
+| Client hosted links | Netlify Functions |
+
+Desktop and PWA call these endpoints when **Settings → Cloud Sync** is enabled. All core CRUD works offline in the desktop app.
+
+---
+
+## Versioning
+
+Desktop version is set in:
+
+- `package.json` → `version`
+- `src-tauri/tauri.conf.json` → `version`
+
+Keep them in sync before tagging a release.
