@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Plus, Trash2, Mail, Phone, Building2, Pencil, Link2, Check } from 'lucide-react'
+import { Users, Plus, Trash2, Mail, Phone, Building2, Pencil, Link2, Check, Download, Cloud } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -10,7 +10,7 @@ import type { Client } from '../lib/types'
 import { DEFAULT_CLIENT_APP_LIFECYCLE } from '../lib/types'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { getPortalUrl, publishClientPortal } from '../lib/portal'
-import { getClientAppUrl, publishClientApp } from '../lib/client-app'
+import { getClientAppUrl, publishClientApp, exportClientWorkspaceForClient } from '../lib/client-app'
 import { ClientGuestInvitesPanel } from '../components/ClientGuestInvitesPanel'
 import { ClientAppLifecyclePanel } from '../components/ClientAppLifecyclePanel'
 
@@ -21,6 +21,7 @@ export default function Clients() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', address: '', notes: '' })
   const [copiedId, setCopiedId] = useState('')
   const [copiedAppId, setCopiedAppId] = useState('')
+  const [publishStatus, setPublishStatus] = useState('')
 
   const openCreate = () => {
     setEditing(null)
@@ -66,11 +67,29 @@ export default function Clients() {
         appLifecycle: updated.appLifecycle,
       })
     }
-    await publishClientApp(token, updated, state)
+    const result = await publishClientApp(token, updated, state, { downloadBundle: true })
     const url = getClientAppUrl(token)
     await navigator.clipboard.writeText(url)
     setCopiedAppId(client.id)
-    setTimeout(() => setCopiedAppId(''), 2000)
+    setPublishStatus(
+      result.remote
+        ? 'Link copied · workspace file downloaded · synced to Netlify'
+        : 'Link copied · workspace file downloaded · local only (sign in to Netlify to sync)',
+    )
+    setTimeout(() => {
+      setCopiedAppId('')
+      setPublishStatus('')
+    }, 4000)
+  }
+
+  const handleExportWorkspace = async (client: Client) => {
+    const token = client.clientAppToken || generateClientAppToken(client.id)
+    if (!client.clientAppToken) {
+      updateClient(client.id, { clientAppToken: token })
+    }
+    await exportClientWorkspaceForClient(token, { ...client, clientAppToken: token }, state)
+    setPublishStatus(`Exported .workvault file for ${client.name}`)
+    setTimeout(() => setPublishStatus(''), 3000)
   }
 
   const handlePortalLink = async (client: Client) => {
@@ -172,10 +191,21 @@ export default function Clients() {
                       onClick={() => handleClientAppLink(client)}
                     >
                       {copiedAppId === client.id ? (
-                        <><Check size={14} /> WorkVault Link Copied!</>
+                        <><Check size={14} /> Link Copied + File Downloaded</>
                       ) : (
                         <><Link2 size={14} /> Send Client WorkVault</>
                       )}
+                    </Button>
+                    <p className="text-[10px] text-surface-400 flex items-center gap-1 px-0.5">
+                      <Cloud size={10} /> Copies hosted link, downloads .workvault file, saves locally &amp; syncs to Netlify
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleExportWorkspace(client)}
+                    >
+                      <Download size={14} /> Export workspace file only
                     </Button>
                     <Button
                       variant="secondary"
@@ -190,6 +220,9 @@ export default function Clients() {
                       )}
                     </Button>
                     <ClientAppLifecyclePanel client={client} />
+                    {publishStatus && client.clientAppToken && (
+                      <p className="text-[10px] text-brand-700">{publishStatus}</p>
+                    )}
                   </div>
                 )}
 

@@ -6,13 +6,10 @@ import {
 } from './client-closure'
 import { buildClientDeliverables } from './cloud-storage'
 import { deliverEmail } from './integrations-api'
+import { saveLocalClientAppSession } from './client-app'
+import { downloadClientWorkspaceBundle } from './client-app-bundle'
 
-const LOCAL_SESSION_PREFIX = 'workvault-client-app-'
 const LOCAL_ROOM_PREFIX = 'workvault-client-room-data-'
-
-function saveLocalSession(session: ClientAppSessionPublic): void {
-  localStorage.setItem(`${LOCAL_SESSION_PREFIX}${session.token}`, JSON.stringify(session))
-}
 
 function clearLocalClientData(token: string): void {
   localStorage.removeItem(`${LOCAL_ROOM_PREFIX}${token}`)
@@ -150,7 +147,10 @@ export async function closeClientApp(
   }
 
   const tombstone = buildClosureTombstone(token, client, state, outcome, deliverables, folderUrls)
-  saveLocalSession(tombstone)
+  saveLocalClientAppSession(tombstone)
+  if (outcome === 'paid_complete') {
+    downloadClientWorkspaceBundle(tombstone)
+  }
   clearLocalClientData(token)
 
   try {
