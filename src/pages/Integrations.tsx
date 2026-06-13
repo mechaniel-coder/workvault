@@ -13,6 +13,9 @@ import { PageHeader } from '../components/ui/Modal'
 import {
   exchangeGoogleOAuthCode, maskSecret, startGoogleOAuth, syncGoogleCalendar, downloadIcsFeed,
 } from '../lib/integrations-api'
+import { PAYMENT_PROCESSORS } from '../lib/payment-processors'
+import { Select } from '../components/ui/Select'
+import { BusinessIntegrationsSection } from '../components/BusinessIntegrationsSection'
 
 export default function Integrations() {
   const {
@@ -25,6 +28,23 @@ export default function Integrations() {
 
   const creds = state.integrationCredentials
   const ints = state.integrations
+
+  const [oauthHandled, setOauthHandled] = useState(false)
+
+  const oauthProvider = params.get('quickbooks') === 'connected' ? 'quickbooks'
+    : params.get('xero') === 'connected' ? 'xero'
+      : params.get('gmail') === 'connected' ? 'gmail'
+        : null
+  const oauthCode = oauthProvider && !oauthHandled ? params.get('code') : null
+
+  const clearOauthParams = () => {
+    params.delete('quickbooks')
+    params.delete('xero')
+    params.delete('gmail')
+    params.delete('code')
+    setParams(params, { replace: true })
+    setOauthHandled(true)
+  }
 
   useEffect(() => {
     const google = params.get('google')
@@ -100,7 +120,7 @@ export default function Integrations() {
     <div>
       <PageHeader
         title="Integrations"
-        description="Connect Stripe, email, and calendar — contractor and team only."
+        description="Connect payments, bookkeeping, email, scheduling, and bank matching."
       />
 
       {status && (
@@ -110,48 +130,75 @@ export default function Integrations() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Stripe */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
-                <CreditCard size={18} className="text-violet-600" /> Stripe Live Payments
-              </h2>
-              <p className="text-sm text-surface-500 mt-1">
-                Generate Checkout links on invoices. Clients pay online; you mark paid automatically on return.
+        {/* Payment processors */}
+        {PAYMENT_PROCESSORS.map((processor) => (
+          <Card key={processor.id} className="p-6">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
+                  <CreditCard size={18} className="text-violet-600" /> {processor.name}
+                </h2>
+                <p className="text-sm text-surface-500 mt-1">{processor.description}</p>
+              </div>
+              <label className="flex items-center gap-2 shrink-0 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ints[processor.integrationKey]}
+                  onChange={(e) => updateIntegrations({ [processor.integrationKey]: e.target.checked })}
+                  className="rounded border-surface-300 text-brand-600 focus:ring-brand-500"
+                />
+                <span className="text-xs font-medium text-surface-600">Enabled</span>
+              </label>
+            </div>
+
+            <div className="space-y-4">
+              {processor.credentialFields.map((field) => (
+                <Input
+                  key={field.key}
+                  label={field.label}
+                  type={field.secret ? 'password' : 'text'}
+                  value={String(creds[field.key] ?? '')}
+                  onChange={(e) => updateIntegrationCredentials({ [field.key]: e.target.value })}
+                  placeholder={field.placeholder}
+                />
+              ))}
+              {processor.id === 'paypal' && (
+                <Select
+                  label="Environment"
+                  value={creds.paypalMode}
+                  onChange={(e) => updateIntegrationCredentials({ paypalMode: e.target.value as 'sandbox' | 'live' })}
+                  options={[
+                    { value: 'sandbox', label: 'Sandbox (testing)' },
+                    { value: 'live', label: 'Live (production)' },
+                  ]}
+                />
+              )}
+              {processor.credentialFields.some((f) => creds[f.key]) && (
+                <p className="text-xs text-surface-400">
+                  Stored locally:{' '}
+                  {processor.credentialFields
+                    .filter((f) => creds[f.key])
+                    .map((f) => `${f.label} ${maskSecret(String(creds[f.key]))}`)
+                    .join(' · ')}
+                </p>
+              )}
+              <p className="text-xs text-surface-500">
+                Get credentials from{' '}
+                <a href={processor.url} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">
+                  {processor.name} <ExternalLink size={10} />
+                </a>
+                . Checkout links are generated when you send invoices.
               </p>
             </div>
-            <label className="flex items-center gap-2 shrink-0 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={ints.stripeLivePayments}
-                onChange={(e) => updateIntegrations({ stripeLivePayments: e.target.checked })}
-                className="rounded border-surface-300 text-brand-600 focus:ring-brand-500"
-              />
-              <span className="text-xs font-medium text-surface-600">Enabled</span>
-            </label>
-          </div>
+          </Card>
+        ))}
 
-          <div className="space-y-4">
-            <Input
-              label="Stripe secret key"
-              type="password"
-              value={creds.stripeSecretKey}
-              onChange={(e) => updateIntegrationCredentials({ stripeSecretKey: e.target.value })}
-              placeholder="sk_live_... or sk_test_..."
-            />
-            {creds.stripeSecretKey && (
-              <p className="text-xs text-surface-400">Stored locally: {maskSecret(creds.stripeSecretKey)}</p>
-            )}
-            <p className="text-xs text-surface-500">
-              Get keys from{' '}
-              <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">
-                Stripe Dashboard <ExternalLink size={10} />
-              </a>
-              . For webhooks, set <code className="text-[10px] bg-surface-100 px-1 rounded">STRIPE_WEBHOOK_SECRET</code> in Netlify env pointing to <code className="text-[10px] bg-surface-100 px-1 rounded">/api/stripe/webhook</code>.
-            </p>
-          </div>
-        </Card>
+        <BusinessIntegrationsSection
+          onStatus={setStatus}
+          oauthCode={oauthCode}
+          oauthProvider={oauthProvider}
+          onOAuthHandled={clearOauthParams}
+        />
 
         {/* Email */}
         <Card className="p-6">

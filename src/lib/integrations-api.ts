@@ -1,5 +1,6 @@
 import type { AppState, AvailabilityBlock, IntegrationCredentials, Invoice, Milestone } from './types'
 import { buildInvoiceEmailBody, resolveInvoicePaymentMethods } from './payments'
+import { formatPaymentLinksForEmail } from './payment-processors'
 import { fillTemplate } from './reports'
 import { formatCurrency, formatDate } from './utils'
 
@@ -43,16 +44,6 @@ export async function createStripeCheckout(
   return { url: data.url, sessionId: data.sessionId }
 }
 
-export async function verifyStripeSession(
-  sessionId: string,
-  secretKey?: string,
-): Promise<{ paid: boolean; invoiceId?: string; paidAt?: string }> {
-  const res = await fetch(`/api/stripe/verify/${sessionId}`, {
-    headers: secretKey ? { 'x-stripe-secret': secretKey } : {},
-  })
-  return res.json()
-}
-
 export async function sendEmailViaResend(opts: {
   credentials: IntegrationCredentials
   profileEmail: string
@@ -83,13 +74,121 @@ export async function sendEmailViaResend(opts: {
   return { ok: true, id: data.id }
 }
 
+export async function verifyStripeSession(
+  sessionId: string,
+  secretKey?: string,
+): Promise<{ paid: boolean; invoiceId?: string; paidAt?: string }> {
+  const res = await fetch(`/api/stripe/verify/${sessionId}`, {
+    headers: secretKey ? { 'x-stripe-secret': secretKey } : {},
+  })
+  return res.json()
+}
+
+export async function startGmailOAuth(): Promise<string> {
+  const origin = window.location.origin
+  const res = await fetch(`/api/gmail/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Gmail OAuth start failed')
+  return data.url as string
+}
+
+export async function exchangeGmailOAuthCode(code: string) {
+  const res = await fetch(`/api/gmail/oauth/token?code=${encodeURIComponent(code)}`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Gmail token exchange failed')
+  return data as { refreshToken: string; email: string }
+}
+
+export async function sendEmailViaGmail(opts: {
+  credentials: IntegrationCredentials
+  profileEmail: string
+  profileName: string
+  to: string
+  subject: string
+  text: string
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const from = opts.credentials.gmailAccountEmail || opts.profileEmail
+  if (!opts.credentials.gmailRefreshToken) return { ok: false, error: 'Gmail not connected' }
+  if (!from) return { ok: false, error: 'Configure a Gmail from address' }
+
+  const res = await fetch('/api/gmail/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      refreshToken: opts.credentials.gmailRefreshToken,
+      from,
+      fromName: opts.credentials.emailFromName || opts.profileName,
+      to: opts.to,
+      subject: opts.subject,
+      text: opts.text,
+      replyTo: opts.profileEmail || undefined,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) return { ok: false, error: data.error || 'Gmail send failed' }
+  return { ok: true, id: data.id }
+}
+
+export async function fetchGmailInbox(state: AppState) {
+  const clientEmails = state.clients.map((c) => c.email).filter(Boolean)
+  const res = await fetch('/api/gmail/inbox', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      refreshToken: state.integrationCredentials.gmailRefreshToken,
+      clientEmails,
+      maxResults: 30,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Inbox fetch failed')
+  return data.threads as {
+    id: string
+    threadId: string
+    from: string
+    to: string
+    subject: string
+    snippet: string
+    date: string
+    clientEmail: string | null
+    unread: boolean
+  }[]
+}
+
+export async function deliverEmail(
+  state: AppState,
+  to: string,
+  subject: string,
+  text: string,
+): Promise<{ ok: boolean; provider?: string; error?: string }> {
+  const opts = {
+    credentials: state.integrationCredentials,
+    profileEmail: state.profile.email,
+    profileName: state.profile.name,
+    to,
+    subject,
+    text,
+  }
+
+  if (state.integrations.gmailSendEnabled && state.integrationCredentials.gmailRefreshToken) {
+    const result = await sendEmailViaGmail(opts)
+    return { ...result, provider: 'gmail' }
+  }
+
+  if (state.integrations.emailSendEnabled) {
+    const result = await sendEmailViaResend(opts)
+    return { ...result, provider: 'resend' }
+  }
+
+  return { ok: false, error: 'No email provider enabled' }
+}
+
 export function buildInvoiceEmailContent(invoice: Invoice, state: AppState) {
   const client = state.clients.find((c) => c.id === invoice.clientId)
   const methods = resolveInvoicePaymentMethods(state.profile, invoice.paymentMethodIds)
   let text = buildInvoiceEmailBody(invoice, state.profile, client?.name || 'there', methods)
-  if (invoice.stripeCheckoutUrl && state.integrations.stripeLivePayments) {
-    text += `\n\nPay online: ${invoice.stripeCheckoutUrl}`
-  }
+  const paymentBlock = formatPaymentLinksForEmail(invoice, state)
+  if (paymentBlock) text += `\n\n${paymentBlock}`
   return {
     to: client?.email || '',
     subject: `Invoice ${invoice.number} — ${formatCurrency(invoice.total, state.profile.defaultCurrency)}`,
@@ -118,9 +217,8 @@ export function buildReminderEmailContent(invoice: Invoice, state: AppState) {
   let text = template
     ? fillTemplate(template.body, vars)
     : `Hi ${vars.clientName},\n\nThis is a friendly reminder that invoice ${invoice.number} for ${vars.amount} is due on ${vars.dueDate}.\n\nThank you.`
-  if (invoice.stripeCheckoutUrl && state.integrations.stripeLivePayments) {
-    text += `\n\nPay online: ${invoice.stripeCheckoutUrl}`
-  }
+  const paymentBlock = formatPaymentLinksForEmail(invoice, state)
+  if (paymentBlock) text += `\n\n${paymentBlock}`
   return { to: client?.email || '', subject, text }
 }
 

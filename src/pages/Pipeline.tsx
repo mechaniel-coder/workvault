@@ -216,6 +216,7 @@ export default function Pipeline() {
       paidAt: null,
       stripeCheckoutUrl: null,
       stripeSessionId: null,
+      paymentLinks: [],
     })
 
     updateMilestone(milestone.id, {

@@ -36,6 +36,7 @@ import Documents from './pages/Documents'
 import Tools from './pages/Tools'
 import Subcontractors from './pages/Subcontractors'
 import Tax1099 from './pages/Tax1099'
+import Inbox from './pages/Inbox'
 
 function ProtectedApp() {
   return (
@@ -53,6 +54,7 @@ const appRoutes = (
     <Route path="proposals" element={<Proposals />} />
     <Route path="contracts" element={<Contracts />} />
     <Route path="invoices" element={<Invoices />} />
+    <Route path="inbox" element={<Inbox />} />
     <Route path="finance" element={<Finance />} />
     <Route path="scope" element={<ScopeLog />} />
     <Route path="documents" element={<Documents />} />

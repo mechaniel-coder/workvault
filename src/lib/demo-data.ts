@@ -1,5 +1,5 @@
 import type { AppState } from './types'
-import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS } from './types'
+import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS, DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META } from './types'
 
 export interface DemoSessionInfo {
   contractorName: string
@@ -179,6 +179,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         paidAt: null,
         stripeCheckoutUrl: null,
         stripeSessionId: null,
+        paymentLinks: [],
         createdAt: isoDaysAgo(10),
       },
       {
@@ -203,6 +204,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         paidAt: isoDaysAgo(18),
         stripeCheckoutUrl: null,
         stripeSessionId: null,
+        paymentLinks: [],
         createdAt: isoDaysAgo(30),
       },
     ],
@@ -398,6 +400,11 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
     integrations: { ...DEFAULT_INTEGRATIONS },
     integrationCredentials: { ...DEFAULT_INTEGRATION_CREDENTIALS, emailFrom: 'demo@workvault-preview.example', emailFromName: contractor },
     calendarSyncMeta: { ...DEFAULT_CALENDAR_SYNC_META },
+    bookkeepingSyncMeta: { ...DEFAULT_BOOKKEEPING_SYNC_META },
+    schedulingMeta: { ...DEFAULT_SCHEDULING_META },
+    plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META },
+    bankTransactions: [],
+    gmailInboxCache: [],
     subcontractorPayments: [],
     form1099Records: [],
     tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },

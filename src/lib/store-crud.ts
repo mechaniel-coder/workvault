@@ -3,6 +3,7 @@ import type {
   Form1099NECRecord, IntegrationSettings, IntegrationCredentials, CalendarSyncMeta, Milestone,
   Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor, SubcontractorPayment,
   Tax1099Settings, TaxSettings, TeamMember, VaultDocument, CursorCliSettings,
+  BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
 } from './types'
 
 type Mutate = (fn: (s: AppState) => AppState) => void
@@ -174,6 +175,32 @@ export function createExtendedCrud(mutate: Mutate) {
         ...s,
         calendarSyncMeta: { ...s.calendarSyncMeta, ...data },
       }))
+    },
+    updateBookkeepingSyncMeta: (data: Partial<BookkeepingSyncMeta>) => {
+      mutate((s) => ({
+        ...s,
+        bookkeepingSyncMeta: { ...s.bookkeepingSyncMeta, ...data },
+      }))
+    },
+    updateSchedulingMeta: (data: Partial<SchedulingMeta>) => {
+      mutate((s) => ({
+        ...s,
+        schedulingMeta: { ...s.schedulingMeta, ...data },
+      }))
+    },
+    updatePlaidSyncMeta: (data: Partial<PlaidSyncMeta>) => {
+      mutate((s) => ({
+        ...s,
+        plaidSyncMeta: { ...s.plaidSyncMeta, ...data },
+      }))
+    },
+    bankTransactions: crud<BankTransaction>(mutate, 'bankTransactions', (d, now) => ({
+      ...d,
+      id: crypto.randomUUID(),
+      createdAt: now,
+    })),
+    setGmailInboxCache: (threads: GmailThreadSummary[]) => {
+      mutate((s) => ({ ...s, gmailInboxCache: threads }))
     },
     updateCursorCliSettings: (data: Partial<CursorCliSettings>) => {
       mutate((s) => ({

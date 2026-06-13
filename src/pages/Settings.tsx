@@ -8,6 +8,7 @@ import { PageHeader } from '../components/ui/Modal'
 import { exportAllData, importAllData } from '../lib/utils'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
 import { PaymentMethodsSettings } from '../components/PaymentMethodsSettings'
+import { getEnabledProcessors, PAYMENT_PROCESSORS } from '../lib/payment-processors'
 import { DemoReviewSettings } from '../components/DemoReviewSettings'
 import { ClientRoomSettings } from '../components/ClientRoomSettings'
 import { DemoProjectDropzone } from '../components/DemoProjectDropzone'
@@ -126,7 +127,7 @@ export default function SettingsPage() {
               <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
                 <Plug size={16} /> Integrations
               </h2>
-              <p className="text-xs text-surface-400 mt-1">Stripe, email, calendar, and export formats</p>
+              <p className="text-xs text-surface-400 mt-1">Payment processors, email, calendar, and export formats</p>
             </div>
             <a href="/integrations">
               <Button variant="secondary" size="sm">Manage Integrations</Button>
@@ -134,12 +135,22 @@ export default function SettingsPage() {
           </div>
           <div className="p-6 grid gap-3 sm:grid-cols-3 text-sm">
             <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
-              <p className="font-medium text-surface-800">Stripe</p>
-              <p className="text-xs text-surface-500 mt-1">{state.integrations.stripeLivePayments ? 'Live checkout enabled' : 'Off'}</p>
+              <p className="font-medium text-surface-800">Payments</p>
+              <p className="text-xs text-surface-500 mt-1">
+                {(() => {
+                  const enabled = getEnabledProcessors(state.integrations)
+                  if (enabled.length === 0) return 'No live checkout'
+                  return enabled.map((id) => PAYMENT_PROCESSORS.find((p) => p.id === id)?.name || id).join(', ')
+                })()}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
               <p className="font-medium text-surface-800">Email</p>
-              <p className="text-xs text-surface-500 mt-1">{state.integrations.emailSendEnabled ? 'Resend configured' : 'mailto fallback'}</p>
+              <p className="text-xs text-surface-500 mt-1">
+                {state.integrations.gmailSendEnabled && state.integrationCredentials.gmailAccountEmail
+                  ? `Gmail (${state.integrationCredentials.gmailAccountEmail})`
+                  : state.integrations.emailSendEnabled ? 'Resend configured' : 'mailto fallback'}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-surface-50 border border-surface-100">
               <p className="font-medium text-surface-800">1099 Filing</p>

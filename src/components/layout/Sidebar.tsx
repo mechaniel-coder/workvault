@@ -24,6 +24,7 @@ import {
   FileSpreadsheet,
   UserCircle2,
   Terminal,
+  Inbox,
 } from 'lucide-react'
 import { useDemoOptional } from '../../context/DemoContext'
 
@@ -42,6 +43,7 @@ const navSections = [
       { to: '/proposals', icon: FileSignature, label: 'Proposals' },
       { to: '/contracts', icon: FileText, label: 'Contracts' },
       { to: '/invoices', icon: Receipt, label: 'Invoices' },
+      { to: '/inbox', icon: Inbox, label: 'Inbox' },
       { to: '/finance', icon: Wallet, label: 'Finance' },
       { to: '/tax-1099', icon: FileSpreadsheet, label: '1099 Filing' },
       { to: '/clients', icon: Users, label: 'Clients' },

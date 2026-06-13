@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Calculator, CalendarDays, Mail, Plus, PencilLine, Trash2, RefreshCw, Download, Loader2 } from 'lucide-react'
+import { Calculator, CalendarDays, Mail, Plus, PencilLine, Trash2, RefreshCw, Download, Loader2, CalendarClock, Copy, Check, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
@@ -13,11 +13,13 @@ import { calculateRate } from '../lib/tax'
 import { fillTemplate } from '../lib/reports'
 import { formatCurrency } from '../lib/utils'
 import { syncGoogleCalendar, downloadIcsFeed } from '../lib/integrations-api'
+import { fetchCalcomBookingLink, fetchCalendlyBookingLink } from '../lib/scheduling-api'
 import type { AvailabilityBlock, EmailTemplate, EmailTemplateType } from '../lib/types'
 
 const tabs = [
   { id: 'rate', label: 'Rate Calculator', icon: Calculator },
   { id: 'availability', label: 'Availability', icon: CalendarDays },
+  { id: 'scheduling', label: 'Scheduling', icon: CalendarClock },
   { id: 'templates', label: 'Email Templates', icon: Mail },
 ] as const
 
@@ -73,10 +75,12 @@ function getWeekdayLabel(date: string) {
 }
 
 export default function Tools() {
-  const { state, addAvailabilityBlock, deleteAvailabilityBlock, updateEmailTemplate, addEmailTemplate, deleteEmailTemplate, updateCalendarSyncMeta } = useStore()
+  const { state, addAvailabilityBlock, deleteAvailabilityBlock, updateEmailTemplate, addEmailTemplate, deleteEmailTemplate, updateCalendarSyncMeta, updateSchedulingMeta, updateIntegrationCredentials } = useStore()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]['id']>('rate')
   const [calendarSyncing, setCalendarSyncing] = useState(false)
   const [calendarStatus, setCalendarStatus] = useState('')
+  const [schedulingBusy, setSchedulingBusy] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const [rateForm, setRateForm] = useState({
     desiredIncome: String(state.profile.defaultHourlyRate * 1800),
@@ -149,6 +153,37 @@ export default function Tools() {
     } finally {
       setCalendarSyncing(false)
     }
+  }
+
+  const refreshSchedulingLink = async () => {
+    setSchedulingBusy(true)
+    setCalendarStatus('')
+    try {
+      const creds = state.integrationCredentials
+      if (state.integrations.calcomScheduling) {
+        const data = await fetchCalcomBookingLink(creds)
+        updateSchedulingMeta({ provider: 'calcom', bookingUrl: data.bookingUrl, eventTypeName: data.eventTypeName, lastFetchedAt: new Date().toISOString() })
+        setCalendarStatus(`Cal.com link ready`)
+      } else if (state.integrations.calendlyScheduling) {
+        const data = await fetchCalendlyBookingLink(creds)
+        updateSchedulingMeta({ provider: 'calendly', bookingUrl: data.bookingUrl, eventTypeName: data.eventTypeName, lastFetchedAt: new Date().toISOString() })
+        if (data.eventUri) updateIntegrationCredentials({ calendlyEventUri: data.eventUri })
+        setCalendarStatus(`Calendly link ready`)
+      } else {
+        setCalendarStatus('Enable Cal.com or Calendly in Integrations')
+      }
+    } catch (e) {
+      setCalendarStatus(e instanceof Error ? e.message : 'Scheduling lookup failed')
+    } finally {
+      setSchedulingBusy(false)
+    }
+  }
+
+  const copyBookingLink = () => {
+    if (!state.schedulingMeta.bookingUrl) return
+    navigator.clipboard.writeText(state.schedulingMeta.bookingUrl)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
   }
 
   const openNewTemplate = () => {
@@ -349,6 +384,47 @@ export default function Tools() {
             </div>
           )}
         </div>
+      )}
+
+      {activeTab === 'scheduling' && (
+        <Card className="p-6 max-w-2xl">
+          <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
+            <CalendarClock size={18} className="text-indigo-600" /> Client booking link
+          </h2>
+          <p className="text-sm text-surface-500 mt-1 mb-4">
+            Share your Cal.com or Calendly link with prospects and clients. Configure in{' '}
+            <Link to="/integrations" className="text-brand-600 hover:underline">Integrations</Link>.
+          </p>
+          {state.schedulingMeta.bookingUrl ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-surface-200 bg-surface-50 p-4">
+                <p className="text-sm font-medium text-surface-900">{state.schedulingMeta.eventTypeName}</p>
+                <p className="text-xs text-surface-500 mt-1 break-all">{state.schedulingMeta.bookingUrl}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={copyBookingLink}>
+                  {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+                  {copiedLink ? 'Copied' : 'Copy link'}
+                </Button>
+                <a href={state.schedulingMeta.bookingUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="secondary"><ExternalLink size={16} /> Open</Button>
+                </a>
+                <Button variant="ghost" onClick={refreshSchedulingLink} disabled={schedulingBusy}>
+                  {schedulingBusy ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-surface-500">No booking link yet.</p>
+              <Button onClick={refreshSchedulingLink} disabled={schedulingBusy}>
+                {schedulingBusy ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                Load booking link
+              </Button>
+            </div>
+          )}
+        </Card>
       )}
 
       {activeTab === 'templates' && (
