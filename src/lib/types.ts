@@ -43,7 +43,7 @@ export interface BusinessProfile {
   paymentMethods: PaymentMethod[]
   defaultPaymentInstructions: string
   /** Tailors navigation, copy, and theme for the user's trade */
-  industryId: 'general' | 'creative' | 'software' | 'construction' | 'consulting' | 'marketing'
+  industryId: 'general' | 'creative' | 'software' | 'construction' | 'consulting' | 'marketing' | 'legal' | 'healthcare' | 'photography' | 'writing' | 'real-estate' | 'education' | 'accounting' | 'events' | 'nonprofit' | 'fitness' | 'architecture' | 'music' | 'culinary' | 'translation' | 'research' | 'cleaning' | 'automotive' | 'pet-services' | 'insurance' | 'fashion' | 'beauty' | 'security' | 'landscaping' | 'childcare' | 'logistics' | 'solar' | 'film' | 'aviation' | 'printing' | 'property-management'
 }
 
 export interface Client {
