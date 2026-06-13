@@ -2,11 +2,25 @@ import { getStore } from '@netlify/blobs'
 
 export async function storePaymentSession(sessionId: string, data: {
   invoiceId: string
+  processor?: string
   status: 'pending' | 'paid'
   paidAt?: string
 }) {
   const store = getStore({ name: 'workvault-payments', consistency: 'strong' })
   await store.setJSON(`session/${sessionId}`, { ...data, updatedAt: new Date().toISOString() })
+}
+
+export async function markPaymentSessionPaid(sessionId: string, paidAt?: string) {
+  const store = getStore({ name: 'workvault-payments', consistency: 'strong' })
+  const existing = await store.get(`session/${sessionId}`, { type: 'json' }) as {
+    invoiceId: string
+    processor?: string
+    status: string
+  } | null
+  if (!existing) return null
+  const updated = { ...existing, status: 'paid' as const, paidAt: paidAt || new Date().toISOString(), updatedAt: new Date().toISOString() }
+  await store.setJSON(`session/${sessionId}`, updated)
+  return updated
 }
 
 export async function getPaymentSession(sessionId: string) {
@@ -24,21 +38,27 @@ export async function storeOAuthCode(code: string, data: {
   email: string
   calendarId: string
 }) {
-  const store = getStore({ name: 'workvault-oauth', consistency: 'strong' })
-  await store.setJSON(`google/${code}`, { ...data, createdAt: new Date().toISOString() }, {
-    metadata: { ttl: String(Date.now() + 10 * 60 * 1000) },
-  })
+  return storeProviderOAuthCode('google', code, data)
 }
 
 export async function consumeOAuthCode(code: string) {
-  const store = getStore({ name: 'workvault-oauth', consistency: 'strong' })
-  const key = `google/${code}`
-  const data = await store.get(key, { type: 'json' }) as {
+  return consumeProviderOAuthCode('google', code) as Promise<{
     refreshToken: string
     email: string
     calendarId: string
     createdAt: string
-  } | null
+  } | null>
+}
+
+export async function storeProviderOAuthCode(provider: string, code: string, data: Record<string, unknown>) {
+  const store = getStore({ name: 'workvault-oauth', consistency: 'strong' })
+  await store.setJSON(`${provider}/${code}`, { ...data, createdAt: new Date().toISOString() })
+}
+
+export async function consumeProviderOAuthCode(provider: string, code: string) {
+  const store = getStore({ name: 'workvault-oauth', consistency: 'strong' })
+  const key = `${provider}/${code}`
+  const data = await store.get(key, { type: 'json' }) as Record<string, unknown> | null
   if (data) await store.delete(key)
   return data
 }

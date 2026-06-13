@@ -3,6 +3,7 @@ import {
   DEFAULT_PROFILE, DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES,
   DEFAULT_DEMO_SETTINGS, DEFAULT_DEMO_PROJECT_TRANSFER, DEFAULT_CLIENT_ROOM_CONFIG,
   DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS,
+  DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META,
 } from './types'
 import { defaultSubcontractorTaxFields } from './tax-1099'
 
@@ -41,6 +42,11 @@ export function createInitialState(): AppState {
     integrations: { ...DEFAULT_INTEGRATIONS },
     integrationCredentials: { ...DEFAULT_INTEGRATION_CREDENTIALS },
     calendarSyncMeta: { ...DEFAULT_CALENDAR_SYNC_META },
+    bookkeepingSyncMeta: { ...DEFAULT_BOOKKEEPING_SYNC_META },
+    schedulingMeta: { ...DEFAULT_SCHEDULING_META },
+    plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META },
+    bankTransactions: [],
+    gmailInboxCache: [],
     activeTimer: null,
     syncMeta: { lastSyncedAt: null, autoSync: false },
     demoSettings: { ...DEFAULT_DEMO_SETTINGS },
@@ -77,6 +83,16 @@ export function loadState(): AppState {
         paymentInstructions: inv.paymentInstructions || '',
         stripeCheckoutUrl: inv.stripeCheckoutUrl ?? null,
         stripeSessionId: inv.stripeSessionId ?? null,
+        paymentLinks: inv.paymentLinks || (
+          inv.stripeCheckoutUrl
+            ? [{
+              processor: 'stripe' as const,
+              url: inv.stripeCheckoutUrl,
+              externalId: inv.stripeSessionId ?? null,
+              createdAt: inv.sentAt || inv.createdAt,
+            }]
+            : []
+        ),
       })),
       clients: (parsed.clients || []).map((c) => ({
         ...c,
@@ -116,6 +132,20 @@ export function loadState(): AppState {
         ...parsed.calendarSyncMeta,
         eventMap: parsed.calendarSyncMeta?.eventMap || {},
       },
+      bookkeepingSyncMeta: {
+        ...DEFAULT_BOOKKEEPING_SYNC_META,
+        ...parsed.bookkeepingSyncMeta,
+        quickbooksCustomerMap: parsed.bookkeepingSyncMeta?.quickbooksCustomerMap || {},
+        quickbooksInvoiceMap: parsed.bookkeepingSyncMeta?.quickbooksInvoiceMap || {},
+        quickbooksExpenseMap: parsed.bookkeepingSyncMeta?.quickbooksExpenseMap || {},
+        xeroContactMap: parsed.bookkeepingSyncMeta?.xeroContactMap || {},
+        xeroInvoiceMap: parsed.bookkeepingSyncMeta?.xeroInvoiceMap || {},
+        xeroExpenseMap: parsed.bookkeepingSyncMeta?.xeroExpenseMap || {},
+      },
+      schedulingMeta: { ...DEFAULT_SCHEDULING_META, ...parsed.schedulingMeta },
+      plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META, ...parsed.plaidSyncMeta },
+      bankTransactions: parsed.bankTransactions || [],
+      gmailInboxCache: parsed.gmailInboxCache || [],
       demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
         uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
         allowDownloads: parsed.demoSettings?.allowDownloads ?? false,

@@ -197,6 +197,17 @@ export interface Invoice {
   paidAt: string | null
   stripeCheckoutUrl: string | null
   stripeSessionId: string | null
+  /** Live checkout links from enabled payment processors */
+  paymentLinks: InvoicePaymentLink[]
+  createdAt: string
+}
+
+export type PaymentProcessorId = 'stripe' | 'paypal' | 'square' | 'wise' | 'lemon_squeezy' | 'paddle'
+
+export interface InvoicePaymentLink {
+  processor: PaymentProcessorId
+  url: string
+  externalId: string | null
   createdAt: string
 }
 
@@ -681,10 +692,82 @@ export interface TaxSettings {
   mileageRate: number
 }
 
+export interface CalendarSyncMeta {
+  lastSyncedAt: string | null
+  eventMap: Record<string, string>
+}
+
+export interface BookkeepingSyncMeta {
+  quickbooksLastSyncedAt: string | null
+  xeroLastSyncedAt: string | null
+  quickbooksCustomerMap: Record<string, string>
+  quickbooksInvoiceMap: Record<string, string>
+  quickbooksExpenseMap: Record<string, string>
+  xeroContactMap: Record<string, string>
+  xeroInvoiceMap: Record<string, string>
+  xeroExpenseMap: Record<string, string>
+}
+
+export interface SchedulingMeta {
+  provider: 'calcom' | 'calendly' | null
+  bookingUrl: string
+  eventTypeName: string
+  lastFetchedAt: string | null
+}
+
+export interface PlaidSyncMeta {
+  connected: boolean
+  itemId: string
+  accountId: string
+  accountName: string
+  institutionName: string
+  lastFetchedAt: string | null
+  cursor: string | null
+}
+
+export interface BankTransaction {
+  id: string
+  plaidTransactionId: string
+  date: string
+  name: string
+  amount: number
+  currency: string
+  matchedInvoiceId: string | null
+  matchConfidence: 'high' | 'medium' | 'low' | null
+  ignored: boolean
+  createdAt: string
+}
+
+export interface GmailThreadSummary {
+  id: string
+  threadId: string
+  from: string
+  to: string
+  subject: string
+  snippet: string
+  date: string
+  clientId: string | null
+  clientName: string | null
+  unread: boolean
+}
+
 export interface IntegrationSettings {
   quickbooksExport: boolean
   xeroExport: boolean
+  quickbooksLiveSync: boolean
+  xeroLiveSync: boolean
+  calcomScheduling: boolean
+  calendlyScheduling: boolean
+  gmailSendEnabled: boolean
+  gmailInboxEnabled: boolean
+  plaidBankMatch: boolean
+  plaidAutoMatch: boolean
   stripeLivePayments: boolean
+  paypalPayments: boolean
+  squarePayments: boolean
+  wisePayments: boolean
+  lemonSqueezyPayments: boolean
+  paddlePayments: boolean
   wiseMultiCurrency: boolean
   googleCalendarSync: boolean
   emailSendEnabled: boolean
@@ -696,6 +779,18 @@ export interface IntegrationSettings {
 
 export interface IntegrationCredentials {
   stripeSecretKey: string
+  paypalClientId: string
+  paypalClientSecret: string
+  paypalMode: 'sandbox' | 'live'
+  squareAccessToken: string
+  squareLocationId: string
+  wiseApiToken: string
+  wiseProfileId: string
+  lemonSqueezyApiKey: string
+  lemonSqueezyStoreId: string
+  lemonSqueezyVariantId: string
+  paddleApiKey: string
+  paddleVendorId: string
   resendApiKey: string
   emailFrom: string
   emailFromName: string
@@ -704,11 +799,20 @@ export interface IntegrationCredentials {
   googleAccountEmail: string
   track1099ApiKey: string
   tax1099ComApiKey: string
-}
-
-export interface CalendarSyncMeta {
-  lastSyncedAt: string | null
-  eventMap: Record<string, string>
+  quickbooksRefreshToken: string
+  quickbooksRealmId: string
+  quickbooksCompanyName: string
+  xeroRefreshToken: string
+  xeroTenantId: string
+  xeroTenantName: string
+  calcomApiKey: string
+  calcomUsername: string
+  calcomEventSlug: string
+  calendlyApiKey: string
+  calendlyEventUri: string
+  gmailRefreshToken: string
+  gmailAccountEmail: string
+  plaidAccessToken: string
 }
 
 export interface AppState {
@@ -738,6 +842,11 @@ export interface AppState {
   integrations: IntegrationSettings
   integrationCredentials: IntegrationCredentials
   calendarSyncMeta: CalendarSyncMeta
+  bookkeepingSyncMeta: BookkeepingSyncMeta
+  schedulingMeta: SchedulingMeta
+  plaidSyncMeta: PlaidSyncMeta
+  bankTransactions: BankTransaction[]
+  gmailInboxCache: GmailThreadSummary[]
   activeTimer: { entryId: string; startedAt: string } | null
   syncMeta: SyncMeta
   demoSettings: DemoSettings
@@ -775,7 +884,20 @@ export const DEFAULT_TAX_SETTINGS: TaxSettings = {
 export const DEFAULT_INTEGRATIONS: IntegrationSettings = {
   quickbooksExport: false,
   xeroExport: false,
+  quickbooksLiveSync: false,
+  xeroLiveSync: false,
+  calcomScheduling: false,
+  calendlyScheduling: false,
+  gmailSendEnabled: false,
+  gmailInboxEnabled: false,
+  plaidBankMatch: false,
+  plaidAutoMatch: false,
   stripeLivePayments: false,
+  paypalPayments: false,
+  squarePayments: false,
+  wisePayments: false,
+  lemonSqueezyPayments: false,
+  paddlePayments: false,
   wiseMultiCurrency: false,
   googleCalendarSync: false,
   emailSendEnabled: false,
@@ -787,6 +909,18 @@ export const DEFAULT_INTEGRATIONS: IntegrationSettings = {
 
 export const DEFAULT_INTEGRATION_CREDENTIALS: IntegrationCredentials = {
   stripeSecretKey: '',
+  paypalClientId: '',
+  paypalClientSecret: '',
+  paypalMode: 'sandbox',
+  squareAccessToken: '',
+  squareLocationId: '',
+  wiseApiToken: '',
+  wiseProfileId: '',
+  lemonSqueezyApiKey: '',
+  lemonSqueezyStoreId: '',
+  lemonSqueezyVariantId: '',
+  paddleApiKey: '',
+  paddleVendorId: '',
   resendApiKey: '',
   emailFrom: '',
   emailFromName: '',
@@ -795,6 +929,48 @@ export const DEFAULT_INTEGRATION_CREDENTIALS: IntegrationCredentials = {
   googleAccountEmail: '',
   track1099ApiKey: '',
   tax1099ComApiKey: '',
+  quickbooksRefreshToken: '',
+  quickbooksRealmId: '',
+  quickbooksCompanyName: '',
+  xeroRefreshToken: '',
+  xeroTenantId: '',
+  xeroTenantName: '',
+  calcomApiKey: '',
+  calcomUsername: '',
+  calcomEventSlug: '',
+  calendlyApiKey: '',
+  calendlyEventUri: '',
+  gmailRefreshToken: '',
+  gmailAccountEmail: '',
+  plaidAccessToken: '',
+}
+
+export const DEFAULT_BOOKKEEPING_SYNC_META: BookkeepingSyncMeta = {
+  quickbooksLastSyncedAt: null,
+  xeroLastSyncedAt: null,
+  quickbooksCustomerMap: {},
+  quickbooksInvoiceMap: {},
+  quickbooksExpenseMap: {},
+  xeroContactMap: {},
+  xeroInvoiceMap: {},
+  xeroExpenseMap: {},
+}
+
+export const DEFAULT_SCHEDULING_META: SchedulingMeta = {
+  provider: null,
+  bookingUrl: '',
+  eventTypeName: '',
+  lastFetchedAt: null,
+}
+
+export const DEFAULT_PLAID_SYNC_META: PlaidSyncMeta = {
+  connected: false,
+  itemId: '',
+  accountId: '',
+  accountName: '',
+  institutionName: '',
+  lastFetchedAt: null,
+  cursor: null,
 }
 
 export const DEFAULT_TAX1099_SETTINGS: Tax1099Settings = {

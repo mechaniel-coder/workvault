@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { BarChart3, Download, Pencil, Play, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { useDemoDownloadsBlocked } from '../context/DemoContext'
@@ -25,8 +26,10 @@ import {
   getReportSummary,
 } from '../lib/reports'
 import { formatCurrency, formatDate, getNextNumber } from '../lib/utils'
+import { BankReconciliationPanel } from '../components/BankReconciliationPanel'
+import { syncQuickBooks, syncXero } from '../lib/accounting-sync'
 
-type TabKey = 'expenses' | 'tax' | 'recurring' | 'reports'
+type TabKey = 'expenses' | 'tax' | 'recurring' | 'reports' | 'banking'
 
 type ExpenseForm = {
   description: string
@@ -117,10 +120,21 @@ export default function FinancePage() {
     updateRecurringInvoice,
     deleteRecurringInvoice,
     addInvoice,
+    updateIntegrationCredentials,
+    updateBookkeepingSyncMeta,
   } = useStore()
   const downloadsBlocked = useDemoDownloadsBlocked()
+  const [searchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<TabKey>('expenses')
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    (searchParams.get('tab') as TabKey) || 'expenses',
+  )
+  useEffect(() => {
+    const tab = searchParams.get('tab') as TabKey | null
+    if (tab && ['expenses', 'tax', 'recurring', 'reports', 'banking'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
   const [expenseModalOpen, setExpenseModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>(createEmptyExpenseForm())
@@ -261,6 +275,7 @@ export default function FinancePage() {
       paidAt: null,
       stripeCheckoutUrl: null,
       stripeSessionId: null,
+      paymentLinks: [],
     })
 
     updateRecurringInvoice(recurring.id, { lastGenerated: now })
@@ -270,8 +285,35 @@ export default function FinancePage() {
     { key: 'expenses', label: 'Expenses' },
     { key: 'tax', label: 'Tax' },
     { key: 'recurring', label: 'Recurring' },
+    { key: 'banking', label: 'Banking' },
     { key: 'reports', label: 'Reports' },
   ]
+
+  const runBookkeepingSync = async (provider: 'quickbooks' | 'xero') => {
+    try {
+      if (provider === 'quickbooks') {
+        const result = await syncQuickBooks(state, state.integrationCredentials)
+        updateBookkeepingSyncMeta({
+          quickbooksCustomerMap: result.customerMap,
+          quickbooksInvoiceMap: result.invoiceMap,
+          quickbooksExpenseMap: result.expenseMap,
+          quickbooksLastSyncedAt: result.syncedAt,
+        })
+        if (result.refreshToken) updateIntegrationCredentials({ quickbooksRefreshToken: result.refreshToken })
+      } else {
+        const result = await syncXero(state, state.integrationCredentials)
+        updateBookkeepingSyncMeta({
+          xeroContactMap: result.contactMap,
+          xeroInvoiceMap: result.invoiceMap,
+          xeroExpenseMap: result.expenseMap,
+          xeroLastSyncedAt: result.syncedAt,
+        })
+        if (result.refreshToken) updateIntegrationCredentials({ xeroRefreshToken: result.refreshToken })
+      }
+    } catch {
+      // surfaced in integrations
+    }
+  }
 
   return (
     <div>
@@ -673,6 +715,16 @@ export default function FinancePage() {
                   <Button variant="secondary" className="w-full justify-start" onClick={() => exportQuickBooksCsv(state)}>
                     <Download size={14} /> Export QuickBooks CSV
                   </Button>
+                  {state.integrations.quickbooksLiveSync && state.integrationCredentials.quickbooksRefreshToken && (
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => runBookkeepingSync('quickbooks')}>
+                      <RefreshCw size={14} /> Sync to QuickBooks
+                    </Button>
+                  )}
+                  {state.integrations.xeroLiveSync && state.integrationCredentials.xeroRefreshToken && (
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => runBookkeepingSync('xero')}>
+                      <RefreshCw size={14} /> Sync to Xero
+                    </Button>
+                  )}
                   <Button variant="secondary" className="w-full justify-start" onClick={() => exportTimeCsv(state)}>
                     <Download size={14} /> Export Time CSV
                   </Button>
@@ -681,6 +733,16 @@ export default function FinancePage() {
             )}
           </div>
         </div>
+      )}
+
+      {activeTab === 'banking' && state.integrations.plaidBankMatch && (
+        <BankReconciliationPanel />
+      )}
+
+      {activeTab === 'banking' && !state.integrations.plaidBankMatch && (
+        <Card className="p-8 text-center">
+          <p className="text-sm text-surface-600">Enable Plaid bank matching in <a href="/integrations" className="text-brand-600 underline">Integrations</a>.</p>
+        </Card>
       )}
 
       <Modal

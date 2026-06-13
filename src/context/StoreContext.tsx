@@ -6,6 +6,7 @@ import type {
   SyncMeta, TaxSettings, TimeEntry, VaultDocument, WorkProtection, WorkRecord,
   DemoSettings, TeamMember, ClientGuestInvite, CursorCliSettings, CursorCliWorkflow,
   IntegrationCredentials, CalendarSyncMeta, Form1099NECRecord, SubcontractorPayment, Tax1099Settings,
+  BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
 } from '../lib/types'
 import { defaultCursorCliAccessForRole } from '../lib/cursor-cli'
 import { defaultSubcontractorTaxFields, syncForm1099Records as build1099RecordDrafts } from '../lib/tax-1099'
@@ -48,6 +49,13 @@ type StoreContextType = {
   updateIntegrations: (data: Partial<IntegrationSettings>) => void
   updateIntegrationCredentials: (data: Partial<IntegrationCredentials>) => void
   updateCalendarSyncMeta: (data: Partial<CalendarSyncMeta>) => void
+  updateBookkeepingSyncMeta: (data: Partial<BookkeepingSyncMeta>) => void
+  updateSchedulingMeta: (data: Partial<SchedulingMeta>) => void
+  updatePlaidSyncMeta: (data: Partial<PlaidSyncMeta>) => void
+  addBankTransaction: (data: Omit<BankTransaction, 'id' | 'createdAt'>) => BankTransaction
+  updateBankTransaction: (id: string, data: Partial<BankTransaction>) => void
+  deleteBankTransaction: (id: string) => void
+  setGmailInboxCache: (threads: GmailThreadSummary[]) => void
   resetAll: () => void
   addProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project
   updateProject: (id: string, data: Partial<Project>) => void
@@ -434,6 +442,13 @@ export function StoreProvider({
         updateIntegrations: ext.updateIntegrations,
         updateIntegrationCredentials: ext.updateIntegrationCredentials,
         updateCalendarSyncMeta: ext.updateCalendarSyncMeta,
+        updateBookkeepingSyncMeta: ext.updateBookkeepingSyncMeta,
+        updateSchedulingMeta: ext.updateSchedulingMeta,
+        updatePlaidSyncMeta: ext.updatePlaidSyncMeta,
+        addBankTransaction: ext.bankTransactions.add,
+        updateBankTransaction: ext.bankTransactions.update,
+        deleteBankTransaction: ext.bankTransactions.delete,
+        setGmailInboxCache: ext.setGmailInboxCache,
         resetAll,
         addProject: ext.projects.add,
         updateProject: ext.projects.update,

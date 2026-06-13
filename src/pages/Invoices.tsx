@@ -21,8 +21,18 @@ import {
 } from '../lib/payments'
 import { generateInvoicePDF } from '../lib/pdf'
 import {
-  buildInvoiceEmailContent, buildReminderEmailContent, createStripeCheckout, sendEmailViaResend, verifyStripeSession,
+  buildInvoiceEmailContent, buildReminderEmailContent, deliverEmail, verifyStripeSession,
 } from '../lib/integrations-api'
+import {
+  createProcessorCheckout,
+  getEnabledProcessors,
+  getProcessorMeta,
+  invoiceUpdateFromPaymentLinks,
+  mergePaymentLink,
+  normalizeInvoicePaymentLinks,
+  verifyProcessorPayment,
+} from '../lib/payment-processors'
+import type { PaymentProcessorId } from '../lib/types'
 
 export default function Invoices() {
   const { state, addInvoice, updateInvoice, deleteInvoice } = useStore()
@@ -53,10 +63,23 @@ export default function Invoices() {
   }, [showCreate, enabledMethods, form.selectedMethodIds.length])
 
   useEffect(() => {
-    const sessionId = searchParams.get('stripe_session')
-    if (!sessionId) return
+    const processor = searchParams.get('processor') as PaymentProcessorId | null
+    const stripeSession = searchParams.get('stripe_session')
+    const paymentId = searchParams.get('payment_id')
+    const lemonCheckout = searchParams.get('lemon_squeezy_checkout')
+    const paddleTxn = searchParams.get('paddle_transaction')
 
-    verifyStripeSession(sessionId, state.integrationCredentials.stripeSecretKey || undefined)
+    const externalId = stripeSession || paymentId || lemonCheckout || paddleTxn
+    if (!externalId) return
+
+    const activeProcessor = processor || (stripeSession ? 'stripe' : lemonCheckout ? 'lemon_squeezy' : paddleTxn ? 'paddle' : paymentId ? 'paypal' : null)
+    if (!activeProcessor) return
+
+    const verify = activeProcessor === 'stripe'
+      ? verifyStripeSession(externalId, state.integrationCredentials.stripeSecretKey || undefined)
+      : verifyProcessorPayment(activeProcessor, externalId, state.integrationCredentials)
+
+    verify
       .then((result) => {
         if (result.paid && result.invoiceId) {
           updateInvoice(result.invoiceId, {
@@ -64,14 +87,15 @@ export default function Invoices() {
             paidAt: result.paidAt || new Date().toISOString(),
           })
           setToast('Payment received — invoice marked as paid.')
+        } else if (searchParams.get('payment_success') || searchParams.get('stripe_success') || searchParams.get('wise_payment')) {
+          setToast('Payment submitted — confirm receipt and mark the invoice paid if needed.')
         }
       })
       .finally(() => {
-        searchParams.delete('stripe_session')
-        searchParams.delete('stripe_success')
+        ;['processor', 'stripe_session', 'stripe_success', 'stripe_cancel', 'payment_id', 'payment_success', 'payment_cancel', 'square_payment', 'wise_payment', 'lemon_squeezy_checkout', 'paddle_transaction'].forEach((k) => searchParams.delete(k))
         setSearchParams(searchParams, { replace: true })
       })
-  }, [searchParams, setSearchParams, state.integrationCredentials.stripeSecretKey, updateInvoice])
+  }, [searchParams, setSearchParams, state.integrationCredentials, updateInvoice])
 
   const clientOptions = [
     { value: '', label: 'Select client...' },
@@ -149,41 +173,42 @@ export default function Invoices() {
       paidAt: null,
       stripeCheckoutUrl: null,
       stripeSessionId: null,
+      paymentLinks: [],
     })
     setShowCreate(false)
     resetForm()
   }
 
-  const deliverEmail = async (to: string, subject: string, text: string) => {
-    if (!state.integrations.emailSendEnabled) return false
-    const result = await sendEmailViaResend({
-      credentials: state.integrationCredentials,
-      profileEmail: state.profile.email,
-      profileName: state.profile.name,
-      to,
-      subject,
-      text,
-    })
+  const deliverEmailForInvoice = async (to: string, subject: string, text: string) => {
+    if (!state.integrations.gmailSendEnabled && !state.integrations.emailSendEnabled) return false
+    const result = await deliverEmail(state, to, subject, text)
     if (!result.ok) {
       setToast(result.error || 'Email send failed')
       return false
     }
-    setToast('Email sent successfully')
+    setToast(`Email sent via ${result.provider === 'gmail' ? 'Gmail' : 'Resend'}`)
     return true
   }
 
-  const ensureStripeLink = async (invoice: Invoice): Promise<Invoice> => {
-    if (!state.integrations.stripeLivePayments) return invoice
-    if (invoice.stripeCheckoutUrl) return invoice
-    if (!state.integrationCredentials.stripeSecretKey && !state.integrations.stripeLivePayments) return invoice
+  const ensurePaymentLinks = async (invoice: Invoice): Promise<Invoice> => {
+    const processors = getEnabledProcessors(state.integrations)
+    if (processors.length === 0) return invoice
+
+    let links = normalizeInvoicePaymentLinks(invoice)
+    const missing = processors.filter((p) => !links.some((l) => l.processor === p))
+    if (missing.length === 0) return invoice
 
     setBusyId(invoice.id)
     try {
-      const { url, sessionId } = await createStripeCheckout(invoice, state, state.integrationCredentials)
-      updateInvoice(invoice.id, { stripeCheckoutUrl: url, stripeSessionId: sessionId })
-      return { ...invoice, stripeCheckoutUrl: url, stripeSessionId: sessionId }
+      for (const processor of missing) {
+        const link = await createProcessorCheckout(processor, invoice, state)
+        links = mergePaymentLink(links, link)
+      }
+      const patch = invoiceUpdateFromPaymentLinks(links)
+      updateInvoice(invoice.id, patch)
+      return { ...invoice, ...patch }
     } catch (e) {
-      setToast(e instanceof Error ? e.message : 'Stripe checkout failed')
+      setToast(e instanceof Error ? e.message : 'Payment link creation failed')
       return invoice
     } finally {
       setBusyId('')
@@ -192,13 +217,13 @@ export default function Invoices() {
 
   const handleSend = async (invoice: Invoice) => {
     let inv = invoice
-    if (state.integrations.stripeLivePayments) {
-      inv = await ensureStripeLink(invoice)
+    if (getEnabledProcessors(state.integrations).length > 0) {
+      inv = await ensurePaymentLinks(invoice)
     }
     const { to, subject, text } = buildInvoiceEmailContent(inv, state)
 
-    if (state.integrations.emailSendEnabled && to) {
-      const sent = await deliverEmail(to, subject, text)
+    if ((state.integrations.emailSendEnabled || state.integrations.gmailSendEnabled) && to) {
+      const sent = await deliverEmailForInvoice(to, subject, text)
       if (sent) {
         updateInvoice(inv.id, { status: 'sent', sentAt: new Date().toISOString() })
         return
@@ -212,23 +237,27 @@ export default function Invoices() {
 
   const handleSendReminder = async (invoice: Invoice) => {
     let inv = invoice
-    if (state.integrations.stripeLivePayments && !invoice.stripeCheckoutUrl) {
-      inv = await ensureStripeLink(invoice)
+    const processors = getEnabledProcessors(state.integrations)
+    const hasLinks = normalizeInvoicePaymentLinks(invoice).some((l) => processors.includes(l.processor))
+    if (processors.length > 0 && !hasLinks) {
+      inv = await ensurePaymentLinks(invoice)
     }
     const { to, subject, text } = buildReminderEmailContent(inv, state)
 
-    if (state.integrations.emailSendEnabled && to) {
-      await deliverEmail(to, subject, text)
+    if (state.integrations.emailSendEnabled || state.integrations.gmailSendEnabled) {
+      await deliverEmailForInvoice(to, subject, text)
       return
     }
 
     window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`)
   }
 
-  const handleStripeLink = async (invoice: Invoice) => {
-    const inv = await ensureStripeLink(invoice)
-    if (inv.stripeCheckoutUrl) {
-      copyText(inv.stripeCheckoutUrl, `stripe-${invoice.id}`)
+  const handleCopyPaymentLink = async (invoice: Invoice, processor?: PaymentProcessorId) => {
+    const inv = await ensurePaymentLinks(invoice)
+    const links = normalizeInvoicePaymentLinks(inv)
+    const link = processor ? links.find((l) => l.processor === processor) : links[0]
+    if (link?.url) {
+      copyText(link.url, `${link.processor}-${invoice.id}`)
     }
   }
 
@@ -378,12 +407,12 @@ export default function Invoices() {
                               <Button variant="ghost" size="sm" onClick={() => handleSendReminder(invoice)} title="Payment reminder">
                                 <Bell size={14} />
                               </Button>
-                              {state.integrations.stripeLivePayments && (
+                              {getEnabledProcessors(state.integrations).length > 0 && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleStripeLink(invoice)}
-                                  title="Copy Stripe payment link"
+                                  onClick={() => handleCopyPaymentLink(invoice)}
+                                  title="Copy payment link"
                                   disabled={busyId === invoice.id}
                                 >
                                   {busyId === invoice.id ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
@@ -547,6 +576,38 @@ export default function Invoices() {
                   </tbody>
                 </table>
               </div>
+
+              {normalizeInvoicePaymentLinks(viewInvoice).length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-surface-900 flex items-center gap-2 mb-3">
+                    <CreditCard size={15} /> Pay Online
+                  </h3>
+                  <div className="space-y-2">
+                    {normalizeInvoicePaymentLinks(viewInvoice).map((link) => (
+                      <div key={link.processor} className="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4">
+                        <div>
+                          <p className="text-sm font-medium text-surface-900">{getProcessorMeta(link.processor)?.name ?? link.processor}</p>
+                          <p className="text-xs text-surface-500 truncate max-w-md mt-0.5">{link.url}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-4">
+                          <button
+                            onClick={() => copyText(link.url, link.processor)}
+                            className="rounded-lg p-2 text-surface-400 hover:bg-white hover:text-surface-600 transition-colors"
+                            title="Copy link"
+                          >
+                            {copied === link.processor ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                          </button>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm">
+                              Pay Now <ExternalLink size={12} />
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {methods.length > 0 && (
                 <div>
