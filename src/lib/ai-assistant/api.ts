@@ -17,9 +17,12 @@ export type AssistantTurnResponse = {
   error?: string
 }
 
+export type AssistantVariant = 'default' | 'cursor-cli'
+
 export async function callAssistantTurn(
   messages: AssistantChatMessage[],
   context: string,
+  variant: AssistantVariant = 'default',
 ): Promise<AssistantTurnResponse> {
   const apiMessages = messages.map((m) => {
     if (m.role === 'user') return { role: 'user' as const, content: m.content }
@@ -43,7 +46,7 @@ export async function callAssistantTurn(
   const res = await apiFetch('/api/assistant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: apiMessages, context }),
+    body: JSON.stringify({ messages: apiMessages, context, variant }),
   })
   const data = await res.json()
   if (!res.ok) {

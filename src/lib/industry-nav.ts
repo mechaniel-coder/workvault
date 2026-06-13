@@ -121,5 +121,9 @@ export function pageTitleForPath(config: IndustryConfig, path: string): string {
   const match = buildNavSections(config)
     .flatMap((s) => s.items)
     .find((item) => item.to === normalized)
-  return match?.label ?? 'WorkVault'
+  if (match) return match.label
+  if (normalized.startsWith('/cursor-cli')) {
+    return findNavItem(config, 'cursor-cli')?.label ?? 'Cursor CLI'
+  }
+  return 'WorkVault'
 }
