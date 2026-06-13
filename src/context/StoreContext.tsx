@@ -7,7 +7,9 @@ import type {
   DemoSettings, TeamMember, ClientGuestInvite, CursorCliSettings, CursorCliWorkflow,
   IntegrationCredentials, CalendarSyncMeta, Form1099NECRecord, SubcontractorPayment, Tax1099Settings,
   BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
+  CloudStorageMeta,
 } from '../lib/types'
+import { DEFAULT_CLIENT_APP_LIFECYCLE } from '../lib/types'
 import { defaultCursorCliAccessForRole } from '../lib/cursor-cli'
 import { defaultSubcontractorTaxFields, syncForm1099Records as build1099RecordDrafts } from '../lib/tax-1099'
 import { applySignatureToContract, createInitialState, loadState, saveState } from '../lib/utils'
@@ -17,15 +19,15 @@ import { createExtendedCrud } from '../lib/store-crud'
 type StoreContextType = {
   state: AppState
   updateProfile: (profile: Partial<BusinessProfile>) => void
-  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken'>) => Client
+  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken' | 'appLifecycle'>) => Client
   updateClient: (id: string, data: Partial<Client>) => void
   deleteClient: (id: string) => void
-  addTimeEntry: (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => TimeEntry
+  addTimeEntry: (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'source' | 'externalId'> & Partial<Pick<TimeEntry, 'source' | 'externalId'>>) => TimeEntry
   updateTimeEntry: (id: string, data: Partial<TimeEntry>) => void
   deleteTimeEntry: (id: string) => void
-  startTimer: (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'endTime' | 'durationMinutes'>) => void
+  startTimer: (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'endTime' | 'durationMinutes' | 'source' | 'externalId'> & Partial<Pick<TimeEntry, 'source' | 'externalId'>>) => void
   stopTimer: () => void
-  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess'> & { clientFileAccess?: Contract['clientFileAccess'] }) => Contract
+  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess' | 'docusignEnvelopeId' | 'docusignSigningUrl'> & { clientFileAccess?: Contract['clientFileAccess'] }) => Contract
   updateContract: (id: string, data: Partial<Contract>) => void
   signContract: (id: string, signature: ContractSignature) => void
   deleteContract: (id: string) => void
@@ -56,6 +58,7 @@ type StoreContextType = {
   updateBankTransaction: (id: string, data: Partial<BankTransaction>) => void
   deleteBankTransaction: (id: string) => void
   setGmailInboxCache: (threads: GmailThreadSummary[]) => void
+  updateCloudStorageMeta: (data: Partial<CloudStorageMeta>) => void
   resetAll: () => void
   addProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project
   updateProject: (id: string, data: Partial<Project>) => void
@@ -160,8 +163,15 @@ export function StoreProvider({
     mutate((s) => ({ ...s, profile: { ...s.profile, ...profile } }))
   }, [mutate])
 
-  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken'>) => {
-    const client: Client = { ...data, portalToken: null, clientAppToken: null, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+  const addClient = useCallback((data: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken' | 'appLifecycle'>) => {
+    const client: Client = {
+      ...data,
+      portalToken: null,
+      clientAppToken: null,
+      appLifecycle: { ...DEFAULT_CLIENT_APP_LIFECYCLE },
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
     mutate((s) => ({ ...s, clients: [...s.clients, client] }))
     return client
   }, [mutate])
@@ -203,8 +213,14 @@ export function StoreProvider({
     mutate((s) => ({ ...s, clients: s.clients.filter((c) => c.id !== id) }))
   }, [mutate])
 
-  const addTimeEntry = useCallback((data: Omit<TimeEntry, 'id' | 'createdAt'>) => {
-    const entry: TimeEntry = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+  const addTimeEntry = useCallback((data: Omit<TimeEntry, 'id' | 'createdAt' | 'source' | 'externalId'> & Partial<Pick<TimeEntry, 'source' | 'externalId'>>) => {
+    const entry: TimeEntry = {
+      ...data,
+      source: data.source || 'manual',
+      externalId: data.externalId ?? null,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
     mutate((s) => ({ ...s, timeEntries: [entry, ...s.timeEntries] }))
     return entry
   }, [mutate])
@@ -217,9 +233,11 @@ export function StoreProvider({
     mutate((s) => ({ ...s, timeEntries: s.timeEntries.filter((e) => e.id !== id) }))
   }, [mutate])
 
-  const startTimer = useCallback((data: Omit<TimeEntry, 'id' | 'createdAt' | 'endTime' | 'durationMinutes'>) => {
+  const startTimer = useCallback((data: Omit<TimeEntry, 'id' | 'createdAt' | 'endTime' | 'durationMinutes' | 'source' | 'externalId'> & Partial<Pick<TimeEntry, 'source' | 'externalId'>>) => {
     const entry: TimeEntry = {
       ...data,
+      source: data.source || 'timer',
+      externalId: data.externalId ?? null,
       id: crypto.randomUUID(),
       endTime: null,
       durationMinutes: 0,
@@ -250,13 +268,15 @@ export function StoreProvider({
     })
   }, [mutate])
 
-  const addContract = useCallback((data: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess'> & { clientFileAccess?: Contract['clientFileAccess'] }) => {
+  const addContract = useCallback((data: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'signatures' | 'signingToken' | 'clientFileAccess' | 'docusignEnvelopeId' | 'docusignSigningUrl'> & { clientFileAccess?: Contract['clientFileAccess'] }) => {
     const now = new Date().toISOString()
     const contract: Contract = {
       ...data,
       clientFileAccess: data.clientFileAccess ?? 'none',
       signatures: [],
       signingToken: null,
+      docusignEnvelopeId: null,
+      docusignSigningUrl: null,
       id: crypto.randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -449,6 +469,7 @@ export function StoreProvider({
         updateBankTransaction: ext.bankTransactions.update,
         deleteBankTransaction: ext.bankTransactions.delete,
         setGmailInboxCache: ext.setGmailInboxCache,
+        updateCloudStorageMeta: ext.updateCloudStorageMeta,
         resetAll,
         addProject: ext.projects.add,
         updateProject: ext.projects.update,

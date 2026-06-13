@@ -44,7 +44,16 @@ export async function fetchClientAppSession(token: string): Promise<ClientAppSes
 
 export async function resolveClientAppSession(token: string, state?: AppState): Promise<ClientAppSessionPublic | null> {
   const remote = await fetchClientAppSession(token)
-  if (remote?.enabled) return remote
+  if (remote) {
+    if (!remote.enabled && remote.closure) return remote
+    if (remote.enabled) return remote
+  }
+
+  const stored = loadLocalClientAppSession(token)
+  if (stored) {
+    if (!stored.enabled && stored.closure) return stored
+    if (stored.enabled) return stored
+  }
 
   if (state) return validateLocalClientAppToken(token, state)
   try {

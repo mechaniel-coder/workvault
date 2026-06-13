@@ -33,6 +33,7 @@ import {
   verifyProcessorPayment,
 } from '../lib/payment-processors'
 import type { PaymentProcessorId } from '../lib/types'
+import { notifySlackEvent } from '../lib/slack-notify'
 
 export default function Invoices() {
   const { state, addInvoice, updateInvoice, deleteInvoice } = useStore()
@@ -45,6 +46,15 @@ export default function Invoices() {
   const [toast, setToast] = useState('')
 
   const enabledMethods = getEnabledPaymentMethods(state.profile)
+
+  const markInvoicePaid = (invoice: Invoice) => {
+    updateInvoice(invoice.id, { status: 'paid', paidAt: new Date().toISOString() })
+    void notifySlackEvent(state, 'invoice_paid', {
+      number: invoice.number,
+      clientName: invoice.clientName,
+      amount: formatCurrency(invoice.total, state.profile.defaultCurrency),
+    })
+  }
 
   const [form, setForm] = useState({
     clientId: '',
@@ -82,10 +92,18 @@ export default function Invoices() {
     verify
       .then((result) => {
         if (result.paid && result.invoiceId) {
+          const invoice = state.invoices.find((i) => i.id === result.invoiceId)
           updateInvoice(result.invoiceId, {
             status: 'paid',
             paidAt: result.paidAt || new Date().toISOString(),
           })
+          if (invoice) {
+            void notifySlackEvent(state, 'invoice_paid', {
+              number: invoice.number,
+              clientName: invoice.clientName,
+              amount: formatCurrency(invoice.total, state.profile.defaultCurrency),
+            })
+          }
           setToast('Payment received — invoice marked as paid.')
         } else if (searchParams.get('payment_success') || searchParams.get('stripe_success') || searchParams.get('wise_payment')) {
           setToast('Payment submitted — confirm receipt and mark the invoice paid if needed.')
@@ -421,7 +439,7 @@ export default function Invoices() {
                             </>
                           )}
                           {status !== 'paid' && status !== 'cancelled' && (
-                            <Button variant="ghost" size="sm" onClick={() => updateInvoice(invoice.id, { status: 'paid', paidAt: new Date().toISOString() })} title="Mark paid">
+                            <Button variant="ghost" size="sm" onClick={() => markInvoicePaid(invoice)} title="Mark paid">
                               <CheckCircle size={14} />
                             </Button>
                           )}

@@ -16,6 +16,7 @@ import {
 import { PAYMENT_PROCESSORS } from '../lib/payment-processors'
 import { Select } from '../components/ui/Select'
 import { BusinessIntegrationsSection } from '../components/BusinessIntegrationsSection'
+import { DeliveryIntegrationsSection } from '../components/DeliveryIntegrationsSection'
 
 export default function Integrations() {
   const {
@@ -31,11 +32,28 @@ export default function Integrations() {
 
   const [oauthHandled, setOauthHandled] = useState(false)
 
+  const [deliveryOauthHandled, setDeliveryOauthHandled] = useState(false)
+
+  const deliveryOauthProvider = params.get('google_drive') === 'connected' ? 'google_drive'
+    : params.get('dropbox') === 'connected' ? 'dropbox'
+      : null
+  const deliveryOauthCode = deliveryOauthProvider && !deliveryOauthHandled ? params.get('code') : null
+
+  const clearDeliveryOauthParams = () => {
+    params.delete('google_drive')
+    params.delete('dropbox')
+    if (!params.get('quickbooks') && !params.get('xero') && !params.get('gmail')) {
+      params.delete('code')
+    }
+    setParams(params, { replace: true })
+    setDeliveryOauthHandled(true)
+  }
+
   const oauthProvider = params.get('quickbooks') === 'connected' ? 'quickbooks'
     : params.get('xero') === 'connected' ? 'xero'
       : params.get('gmail') === 'connected' ? 'gmail'
         : null
-  const oauthCode = oauthProvider && !oauthHandled ? params.get('code') : null
+  const oauthCode = oauthProvider && !oauthHandled && !deliveryOauthProvider ? params.get('code') : null
 
   const clearOauthParams = () => {
     params.delete('quickbooks')
@@ -49,7 +67,7 @@ export default function Integrations() {
   useEffect(() => {
     const google = params.get('google')
     const code = params.get('code')
-    if (google === 'connected' && code) {
+    if (google === 'connected' && code && !params.get('google_drive') && !params.get('dropbox')) {
       exchangeGoogleOAuthCode(code)
         .then((data) => {
           updateIntegrationCredentials({
@@ -198,6 +216,13 @@ export default function Integrations() {
           oauthCode={oauthCode}
           oauthProvider={oauthProvider}
           onOAuthHandled={clearOauthParams}
+        />
+
+        <DeliveryIntegrationsSection
+          onStatus={setStatus}
+          oauthCode={deliveryOauthCode}
+          oauthProvider={deliveryOauthProvider}
+          onOAuthHandled={clearDeliveryOauthParams}
         />
 
         {/* Email */}

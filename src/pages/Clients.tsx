@@ -7,10 +7,12 @@ import { Textarea } from '../components/ui/Textarea'
 import { Card } from '../components/ui/Card'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { Client } from '../lib/types'
+import { DEFAULT_CLIENT_APP_LIFECYCLE } from '../lib/types'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { getPortalUrl, publishClientPortal } from '../lib/portal'
 import { getClientAppUrl, publishClientApp } from '../lib/client-app'
 import { ClientGuestInvitesPanel } from '../components/ClientGuestInvitesPanel'
+import { ClientAppLifecyclePanel } from '../components/ClientAppLifecyclePanel'
 
 export default function Clients() {
   const { state, addClient, updateClient, deleteClient, generateClientPortalToken, generateClientAppToken, isIsolated } = useStore()
@@ -51,8 +53,19 @@ export default function Clients() {
 
   const handleClientAppLink = async (client: Client) => {
     const token = client.clientAppToken || generateClientAppToken(client.id)
-    const updated = { ...client, clientAppToken: token }
-    if (!client.clientAppToken) updateClient(client.id, { clientAppToken: token })
+    const updated = {
+      ...client,
+      clientAppToken: token,
+      appLifecycle: client.appLifecycle.status === 'archived'
+        ? { ...DEFAULT_CLIENT_APP_LIFECYCLE }
+        : client.appLifecycle,
+    }
+    if (!client.clientAppToken || client.appLifecycle.status === 'archived') {
+      updateClient(client.id, {
+        clientAppToken: token,
+        appLifecycle: updated.appLifecycle,
+      })
+    }
     await publishClientApp(token, updated, state)
     const url = getClientAppUrl(token)
     await navigator.clipboard.writeText(url)
@@ -176,6 +189,7 @@ export default function Clients() {
                         <><Link2 size={14} /> Copy Simple Portal Link</>
                       )}
                     </Button>
+                    <ClientAppLifecyclePanel client={client} />
                   </div>
                 )}
 

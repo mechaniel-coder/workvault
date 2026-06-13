@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import {
   Lock, Shield, CheckCircle2, MessageSquare, ListChecks, PenLine,
   Calendar, Upload, Star, FileText, Receipt, Globe, ChevronRight,
-  ThumbsUp, AlertCircle, Sparkles,
+  ThumbsUp, AlertCircle, Sparkles, FolderOpen, ExternalLink,
 } from 'lucide-react'
 import { ClientRoomProvider, useClientRoom } from '../context/ClientRoomContext'
 import { Card } from '../components/ui/Card'
@@ -171,6 +171,38 @@ function HubContent() {
                     <p className="text-sm font-medium text-surface-900">{m.title}</p>
                     <p className="text-xs text-surface-400">{formatDate(m.date)} · {m.status}</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {session.deliverables.length > 0 && (
+          <Card className="p-5">
+            <h2 className="text-sm font-semibold text-surface-900 flex items-center gap-2 mb-4">
+              <FolderOpen size={16} className="text-amber-600" /> Shared deliverables
+            </h2>
+            <div className="space-y-4">
+              {session.deliverables.map((group) => (
+                <div key={group.projectTitle}>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-surface-500 mb-2">
+                    {group.projectTitle} · {group.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'}
+                  </p>
+                  <ul className="space-y-2">
+                    {group.files.map((file) => (
+                      <li key={file.url}>
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between gap-2 rounded-lg border border-surface-100 px-3 py-2 text-sm hover:bg-surface-50"
+                        >
+                          <span className="truncate text-surface-800">{file.name}</span>
+                          <ExternalLink size={14} className="text-surface-400 shrink-0" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>

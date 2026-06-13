@@ -55,7 +55,40 @@ export interface Client {
   portalToken: string | null
   /** Token for the full Client WorkVault app (`/client/:token`) */
   clientAppToken: string | null
+  /** Lifecycle for the client WorkVault app (local-first; cloud is optional sync) */
+  appLifecycle: ClientAppLifecycle
   createdAt: string
+}
+
+/** Contractor-side tracking for closing the client WorkVault app */
+export interface ClientAppLifecycle {
+  status: 'active' | 'archived'
+  closedAt: string | null
+  closeOutcome: 'paid_complete' | 'unpaid' | null
+  /** Contractor confirms tax docs were exported/saved locally before archival */
+  taxDocsSavedLocallyAt: string | null
+  handoffCompletedAt: string | null
+}
+
+export type ClientAppCloseOutcome = 'paid_complete' | 'unpaid'
+
+/** Tombstone shown to clients after the WorkVault app is removed */
+export interface ClientAppClosureRecord {
+  outcome: ClientAppCloseOutcome
+  closedAt: string
+  clientName: string
+  contractorName: string
+  message: string
+  deliverables: ClientHubDeliverableFile[]
+  folderUrls: string[]
+}
+
+export const DEFAULT_CLIENT_APP_LIFECYCLE: ClientAppLifecycle = {
+  status: 'active',
+  closedAt: null,
+  closeOutcome: null,
+  taxDocsSavedLocallyAt: null,
+  handoffCompletedAt: null,
 }
 
 export type TeamMemberRole = 'owner' | 'admin' | 'member' | 'viewer'
@@ -136,6 +169,8 @@ export interface TimeEntry {
   hourlyRate: number
   billable: boolean
   invoiced: boolean
+  source: 'manual' | 'timer' | 'toggl' | 'harvest'
+  externalId: string | null
   createdAt: string
 }
 
@@ -163,6 +198,8 @@ export interface Contract {
   signedAt: string | null
   signatures: ContractSignature[]
   signingToken: string | null
+  docusignEnvelopeId: string | null
+  docusignSigningUrl: string | null
   /** Granted in client WorkVault after both parties sign */
   clientFileAccess: ClientFileAccess
   createdAt: string
@@ -440,6 +477,19 @@ export interface ClientHubContract {
   currency: string
 }
 
+export interface ClientHubDeliverableFile {
+  name: string
+  url: string
+  mimeType: string
+  modifiedAt: string
+}
+
+export interface ClientHubDeliverableGroup {
+  projectTitle: string
+  provider: 'google_drive' | 'dropbox'
+  files: ClientHubDeliverableFile[]
+}
+
 export interface ClientHubSession {
   token: string
   contractorName: string
@@ -451,6 +501,7 @@ export interface ClientHubSession {
   projectTransfer: DemoProjectTransfer
   invoices: ClientHubInvoice[]
   contracts: ClientHubContract[]
+  deliverables: ClientHubDeliverableGroup[]
   demoUrl: string | null
   clientFileAccess: ClientFileAccess
 }
@@ -476,6 +527,8 @@ export interface ClientAppSessionPublic {
   guestInvites: ClientGuestInvite[]
   /** Filtered app state scoped to this client */
   appState: AppState
+  /** Set when the client app is archived — client sees farewell instead of workspace */
+  closure?: ClientAppClosureRecord | null
 }
 
 export type ProjectStage = 'lead' | 'proposal' | 'active' | 'delivered' | 'invoiced' | 'paid'
@@ -751,6 +804,33 @@ export interface GmailThreadSummary {
   unread: boolean
 }
 
+export type CloudStorageProvider = 'google_drive' | 'dropbox'
+
+export interface ProjectDeliverableLink {
+  projectId: string
+  provider: CloudStorageProvider
+  folderId: string
+  folderName: string
+  folderUrl: string
+}
+
+export interface CloudFile {
+  id: string
+  name: string
+  mimeType: string
+  url: string
+  size?: number
+  modifiedAt: string
+}
+
+export interface CloudStorageMeta {
+  lastSyncedAt: string | null
+  projectFolders: ProjectDeliverableLink[]
+  fileCache: Record<string, CloudFile[]>
+}
+
+export type SlackEventType = 'invoice_paid' | 'contract_signed' | 'scope_change'
+
 export interface IntegrationSettings {
   quickbooksExport: boolean
   xeroExport: boolean
@@ -775,6 +855,15 @@ export interface IntegrationSettings {
   tax1099ComExport: boolean
   quickBooks1099Export: boolean
   irsFire1099Export: boolean
+  googleDriveDeliverables: boolean
+  dropboxDeliverables: boolean
+  slackNotifications: boolean
+  slackNotifyInvoicePaid: boolean
+  slackNotifyContractSigned: boolean
+  slackNotifyScopeChange: boolean
+  togglImport: boolean
+  harvestImport: boolean
+  docusignEnabled: boolean
 }
 
 export interface IntegrationCredentials {
@@ -813,6 +902,22 @@ export interface IntegrationCredentials {
   gmailRefreshToken: string
   gmailAccountEmail: string
   plaidAccessToken: string
+  googleDriveRefreshToken: string
+  googleDriveEmail: string
+  dropboxRefreshToken: string
+  dropboxAccountEmail: string
+  slackWebhookUrl: string
+  slackBotToken: string
+  slackChannel: string
+  togglApiToken: string
+  togglWorkspaceId: string
+  harvestAccountId: string
+  harvestAccessToken: string
+  docusignIntegrationKey: string
+  docusignAccountId: string
+  docusignUserId: string
+  docusignAccessToken: string
+  docusignBaseUrl: string
 }
 
 export interface AppState {
@@ -847,6 +952,7 @@ export interface AppState {
   plaidSyncMeta: PlaidSyncMeta
   bankTransactions: BankTransaction[]
   gmailInboxCache: GmailThreadSummary[]
+  cloudStorageMeta: CloudStorageMeta
   activeTimer: { entryId: string; startedAt: string } | null
   syncMeta: SyncMeta
   demoSettings: DemoSettings
@@ -905,6 +1011,15 @@ export const DEFAULT_INTEGRATIONS: IntegrationSettings = {
   tax1099ComExport: false,
   quickBooks1099Export: false,
   irsFire1099Export: false,
+  googleDriveDeliverables: false,
+  dropboxDeliverables: false,
+  slackNotifications: false,
+  slackNotifyInvoicePaid: true,
+  slackNotifyContractSigned: true,
+  slackNotifyScopeChange: true,
+  togglImport: false,
+  harvestImport: false,
+  docusignEnabled: false,
 }
 
 export const DEFAULT_INTEGRATION_CREDENTIALS: IntegrationCredentials = {
@@ -943,6 +1058,28 @@ export const DEFAULT_INTEGRATION_CREDENTIALS: IntegrationCredentials = {
   gmailRefreshToken: '',
   gmailAccountEmail: '',
   plaidAccessToken: '',
+  googleDriveRefreshToken: '',
+  googleDriveEmail: '',
+  dropboxRefreshToken: '',
+  dropboxAccountEmail: '',
+  slackWebhookUrl: '',
+  slackBotToken: '',
+  slackChannel: '',
+  togglApiToken: '',
+  togglWorkspaceId: '',
+  harvestAccountId: '',
+  harvestAccessToken: '',
+  docusignIntegrationKey: '',
+  docusignAccountId: '',
+  docusignUserId: '',
+  docusignAccessToken: '',
+  docusignBaseUrl: 'https://demo.docusign.net/restapi',
+}
+
+export const DEFAULT_CLOUD_STORAGE_META: CloudStorageMeta = {
+  lastSyncedAt: null,
+  projectFolders: [],
+  fileCache: {},
 }
 
 export const DEFAULT_BOOKKEEPING_SYNC_META: BookkeepingSyncMeta = {

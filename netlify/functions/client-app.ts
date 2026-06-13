@@ -13,7 +13,7 @@ export default async (req: Request, context: Context) => {
   const key = `client-app/${token}`
 
   if (req.method === 'GET') {
-    const session = await store.get(key, { type: 'json' })
+    const session = await store.get(key, { type: 'json' }) as { enabled?: boolean } | null
     if (!session) {
       return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
     }
@@ -29,10 +29,10 @@ export default async (req: Request, context: Context) => {
     const body = await req.json()
     const record = {
       ...body,
-      enabled: true,
+      enabled: body.enabled !== false,
       token,
       ownerId: user.sub,
-      publishedAt: new Date().toISOString(),
+      publishedAt: body.publishedAt || new Date().toISOString(),
     }
     await store.setJSON(key, record)
     return Response.json({ ok: true })

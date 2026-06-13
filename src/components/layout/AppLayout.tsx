@@ -1,6 +1,8 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { AiAssistantPanel } from '../AiAssistantPanel'
+import { AiAssistantProvider } from '../../context/AiAssistantContext'
 import { useStore } from '../../context/StoreContext'
 import { Clock } from 'lucide-react'
 import { formatDuration } from '../../lib/utils'
@@ -26,6 +28,7 @@ export function AppLayout() {
   }, [state.activeTimer])
 
   return (
+    <AiAssistantProvider>
     <div className="min-h-screen bg-surface-50">
       {/* Subtle background texture */}
       <div className="fixed inset-0 pointer-events-none">
@@ -63,6 +66,8 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <AiAssistantPanel />
     </div>
+    </AiAssistantProvider>
   )
 }

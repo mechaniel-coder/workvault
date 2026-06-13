@@ -5,6 +5,7 @@ import type {
 } from './types'
 import { DEFAULT_CLIENT_ROOM_DATA, DEFAULT_DEMO_PROJECT_TRANSFER } from './types'
 import { getPaymentLink } from './payments'
+import { buildClientDeliverables } from './cloud-storage'
 import { loadLocalClientAppSession } from './client-app'
 import { fileAccessFlags, resolveClientFileAccess } from './client-file-access'
 
@@ -87,6 +88,7 @@ function buildHubSessionPayload(
         value: c.value,
         currency: state.profile.defaultCurrency,
       })),
+    deliverables: buildClientDeliverables(state, opts.clientId),
     demoUrl: opts.demoUrl ?? null,
     clientFileAccess: opts.clientFileAccess ?? 'none',
   }

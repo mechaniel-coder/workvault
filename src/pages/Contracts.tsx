@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { FileText, Plus, Send, Download, Trash2, Eye, PenLine, Link2, RefreshCw, Copy, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileText, Plus, Send, Download, Trash2, Eye, PenLine, Link2, RefreshCw, Copy, Check, FileSignature, Loader2 } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
 import { useDemoDownloadsBlocked } from '../context/DemoContext'
 import { Button } from '../components/ui/Button'
@@ -15,15 +16,19 @@ import { fillContractTemplate, formatCurrency, formatDate, getNextNumber, hasSig
 import { CLIENT_FILE_ACCESS_OPTIONS, clientFileAccessLabel } from '../lib/client-file-access'
 import { generateContractPDF } from '../lib/pdf'
 import { createSigningLink, fetchSigningStatus } from '../lib/sync'
+import { createDocuSignEnvelope } from '../lib/docusign-api'
+import { notifySlackEvent } from '../lib/slack-notify'
 
 export default function Contracts() {
   const { state, addContract, updateContract, signContract, deleteContract } = useStore()
+  const [searchParams, setSearchParams] = useSearchParams()
   const downloadsBlocked = useDemoDownloadsBlocked()
   const [showCreate, setShowCreate] = useState(false)
   const [viewContract, setViewContract] = useState<Contract | null>(null)
   const [signContractTarget, setSignContractTarget] = useState<Contract | null>(null)
   const [signingLink, setSigningLink] = useState('')
   const [copied, setCopied] = useState(false)
+  const [docusignBusy, setDocusignBusy] = useState('')
   const [form, setForm] = useState({
     title: '',
     clientId: '',
@@ -44,6 +49,26 @@ export default function Contracts() {
     value: key,
     label: t.name,
   }))
+
+  useEffect(() => {
+    const envelopeId = searchParams.get('docusign_envelope')
+    if (!envelopeId) return
+    const contract = state.contracts.find((c) => c.docusignEnvelopeId === envelopeId)
+    if (contract && contract.status !== 'signed') {
+      updateContract(contract.id, { status: 'awaiting_signature' })
+    }
+    searchParams.delete('docusign_envelope')
+    setSearchParams(searchParams, { replace: true })
+  }, [searchParams, setSearchParams, state.contracts, updateContract])
+
+  const notifyContractSigned = (contract: Contract, signer: string) => {
+    void notifySlackEvent(state, 'contract_signed', {
+      number: contract.number,
+      title: contract.title,
+      clientName: contract.clientName,
+      signer,
+    })
+  }
 
   const handleCreate = () => {
     const client = state.clients.find((c) => c.id === form.clientId)
@@ -133,10 +158,43 @@ export default function Contracts() {
         signatureImage: result.clientSignature.signatureImage,
         signedAt: result.clientSignature.signedAt,
       })
+      notifyContractSigned(contract, result.clientSignature.name)
     } else if (!result.clientSignature) {
       alert('No client signature yet')
     } else {
       alert(result.error || 'Could not refresh')
+    }
+  }
+
+  const handleDocuSign = async (contract: Contract) => {
+    const client = state.clients.find((c) => c.id === contract.clientId)
+    if (!client?.email) {
+      alert('Add a client email before sending via DocuSign.')
+      return
+    }
+    setDocusignBusy(contract.id)
+    try {
+      const returnUrl = `${window.location.origin}/contracts?docusign_envelope=`
+      const result = await createDocuSignEnvelope(contract, {
+        credentials: state.integrationCredentials,
+        clientEmail: client.email,
+        contractorEmail: state.profile.email,
+        contractorName: state.profile.name || 'Contractor',
+        returnUrl: `${returnUrl}{envelopeId}`,
+      })
+      updateContract(contract.id, {
+        docusignEnvelopeId: result.envelopeId,
+        docusignSigningUrl: result.signingUrl,
+        status: 'awaiting_signature',
+        sentAt: contract.sentAt || new Date().toISOString(),
+      })
+      if (result.signingUrl) {
+        setSigningLink(result.signingUrl)
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'DocuSign failed')
+    } finally {
+      setDocusignBusy('')
     }
   }
 
@@ -219,9 +277,26 @@ export default function Contracts() {
                       <PenLine size={14} /> Sign
                     </Button>
                   )}
-                  {hasSignature(contract, 'contractor') && !contract.signingToken && (
+                  {hasSignature(contract, 'contractor') && !contract.signingToken && !contract.docusignEnvelopeId && (
                     <Button variant="secondary" size="sm" onClick={() => handleCreateSigningLink(contract)}>
                       <Link2 size={14} /> Sign Link
+                    </Button>
+                  )}
+                  {state.integrations.docusignEnabled && contract.status !== 'signed' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDocuSign(contract)}
+                      disabled={docusignBusy === contract.id}
+                      title="Send via DocuSign"
+                    >
+                      {docusignBusy === contract.id ? <Loader2 size={14} className="animate-spin" /> : <FileSignature size={14} />}
+                      DocuSign
+                    </Button>
+                  )}
+                  {contract.docusignSigningUrl && !hasSignature(contract, 'client') && (
+                    <Button variant="ghost" size="sm" onClick={() => copyLink(contract.docusignSigningUrl!)} title="Copy DocuSign link">
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
                     </Button>
                   )}
                   {contract.signingToken && !hasSignature(contract, 'client') && (

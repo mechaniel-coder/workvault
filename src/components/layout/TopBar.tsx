@@ -1,10 +1,11 @@
 import { useLocation } from 'react-router-dom'
-import { Bell, Search } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { useStore } from '../../context/StoreContext'
 import { useAuth } from '../../context/AuthContext'
 import { useDemoOptional } from '../../context/DemoContext'
 import { useClientAppOptional } from '../../context/ClientAppContext'
 import { formatDate } from '../../lib/utils'
+import { AiAssistantSearchTrigger } from '../AiAssistantPanel'
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -64,14 +65,7 @@ export function TopBar({ demoMode, clientMode }: { demoMode?: boolean; clientMod
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative hidden sm:block">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-52 rounded-lg border border-surface-200 bg-surface-50 pl-9 pr-3 py-1.5 text-sm text-surface-700 placeholder:text-surface-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15 transition-all"
-          />
-        </div>
+        {!clientMode && !demoMode && <AiAssistantSearchTrigger />}
 
         <button className="relative rounded-lg p-2 text-surface-400 hover:bg-surface-100 hover:text-surface-600 transition-colors">
           <Bell size={18} />
