@@ -1,8 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
-import { AiAssistantPanel } from '../AiAssistantPanel'
-import { AiAssistantProvider } from '../../context/AiAssistantContext'
 import { MobileNav } from './MobileNav'
 import { PwaInstallBanner } from './PwaInstallBanner'
 import { useStore } from '../../context/StoreContext'
@@ -30,9 +28,7 @@ export function AppLayout() {
   }, [state.activeTimer])
 
   return (
-    <AiAssistantProvider>
     <div className="min-h-screen bg-surface-50">
-      {/* Subtle background texture */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.04)_0%,transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(129,140,248,0.03)_0%,transparent_50%)]" />
@@ -70,8 +66,6 @@ export function AppLayout() {
       </div>
       <MobileNav />
       <PwaInstallBanner />
-      <AiAssistantPanel />
     </div>
-    </AiAssistantProvider>
   )
 }

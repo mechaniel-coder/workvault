@@ -54,7 +54,7 @@ Features:
 - Bottom navigation on small screens
 - Same localStorage data model as the web app
 
-Cloud features (sync, assistant, integrations) use Netlify APIs when online.
+Cloud features (sync, integrations) use Netlify APIs when online.
 
 ---
 
@@ -118,7 +118,6 @@ Each industry adapts the dashboard, onboarding picker, and public landing page w
 | Auth & sync | Netlify Identity + Blobs |
 | Payments | Stripe / Square / PayPal functions |
 | OAuth | Google, Dropbox, Slack, etc. |
-| Assistant | Netlify AI Gateway |
 | Client hosted links | Netlify Functions |
 
 Desktop and PWA call these endpoints when **Settings → Cloud Sync** is enabled. All core CRUD works offline in the desktop app.

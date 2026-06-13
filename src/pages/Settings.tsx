@@ -249,12 +249,12 @@ export default function SettingsPage() {
               <>
                 This is the <strong>desktop app</strong>. Your business data is saved on disk at{' '}
                 <code className="text-xs bg-surface-100 px-1 py-0.5 rounded">{dataDirectoryHint()}</code>.
-                Netlify is optional — for sync, client hosted links, AI, OAuth, and payments when you&apos;re online.
+                Netlify is optional — for sync, client hosted links, OAuth, and payments when you&apos;re online.
               </>
             ) : (
               <>
                 Your business data lives on this device first. Netlify optionally hosts client workspace links,
-                encrypted backup sync, integrations (AI, OAuth, payments), and team features — so clients can open a
+                encrypted backup sync, integrations (OAuth, payments), and team features — so clients can open a
                 link online while you both keep local copies. Send clients a <strong>.workvault</strong> file and/or a
                 hosted link from the Clients page. Install the Mac app from the project <code className="text-xs">.dmg</code> installer.
               </>

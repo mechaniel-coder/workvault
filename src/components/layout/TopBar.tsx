@@ -6,7 +6,6 @@ import { useDemoOptional } from '../../context/DemoContext'
 import { useClientAppOptional } from '../../context/ClientAppContext'
 import { useIndustryOptional } from '../../context/IndustryContext'
 import { formatDate } from '../../lib/utils'
-import { AiAssistantSearchTrigger } from '../AiAssistantPanel'
 import { pageTitleForPath } from '../../lib/industry-nav'
 
 const FALLBACK_TITLES: Record<string, string> = {
@@ -48,8 +47,6 @@ export function TopBar({ demoMode, clientMode }: { demoMode?: boolean; clientMod
       </div>
 
       <div className="flex items-center gap-3">
-        {!clientMode && !demoMode && <AiAssistantSearchTrigger />}
-
         <button className="relative rounded-lg p-2 text-surface-400 hover:bg-surface-100 hover:text-surface-600 transition-colors">
           <Bell size={18} />
           {state.invoices.some((i) => i.status === 'overdue') && (

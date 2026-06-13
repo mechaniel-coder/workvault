@@ -75,10 +75,6 @@ Per-user processor keys can also be stored in app Settings; env vars are site-wi
 | `DOCUSIGN_BASE_URL` | DocuSign API base |
 | `QUICKBOOKS_EXPENSE_ACCOUNT_ID` | QuickBooks sync default account |
 
-## AI assistant
-
-The assistant function uses **Netlify AI Gateway** / OpenAI SDK with Netlify-managed credentials when deployed on Netlify. No `OPENAI_API_KEY` is required on Netlify when the gateway is enabled for the site.
-
 ## Local development
 
 Copy `.env.example` to `.env.local` for Vite. Function env vars are loaded by `netlify dev` from `.env` or Netlify CLI linked site config.

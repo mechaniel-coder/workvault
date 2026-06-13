@@ -71,13 +71,6 @@ export default function PrivacyPolicy() {
         </p>
       </section>
       <section>
-        <h2 className="text-lg font-semibold text-white mb-2">Assistant</h2>
-        <p>
-          The optional AI assistant sends conversation context to our API provider when you use it. Do not
-          include sensitive client information you are not authorized to share with a third-party AI service.
-        </p>
-      </section>
-      <section>
         <h2 className="text-lg font-semibold text-white mb-2">Your choices</h2>
         <ul className="list-disc pl-5 space-y-1">
           <li>Use WorkVault fully offline without an account</li>

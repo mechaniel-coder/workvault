@@ -139,7 +139,6 @@ The desktop app works fully offline. Turn on online features when you need them:
 Online features (via [workvault.netlify.app](https://workvault.netlify.app)):
 
 - Encrypted cloud backup
-- AI assistant
 - Payment processors, Gmail, QuickBooks/Xero, Google Drive/Dropbox, Slack, and more
 - Hosted **client workspace links**
 
@@ -184,11 +183,9 @@ flowchart LR
   end
   subgraph netlify [Netlify — optional]
     API[Functions & Identity]
-    AI[AI Gateway]
     Links[Client hosted links]
   end
   App -.->|sync, integrations| API
-  App -.->|assistant| AI
   App -.->|publish| Links
 ```
 
@@ -248,7 +245,7 @@ Official installers are published on [GitHub Releases](https://github.com/mechan
 | `docs/PLATFORMS.md` | Full multi-platform guide |
 | `docs/MACOS_SIGNING.md` | Code signing & notarization |
 | `docs/NETLIFY_ENV.md` | Production environment variables |
-| `netlify/functions/` | Serverless API (payments, OAuth, AI, sync) |
+| `netlify/functions/` | Serverless API (payments, OAuth, sync) |
 | `netlify.toml` | Netlify build & SPA routing |
 
 ---
