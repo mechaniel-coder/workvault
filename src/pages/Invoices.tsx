@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
-  Receipt, Plus, Send, Download, Trash2, CheckCircle, Eye, CreditCard, ExternalLink, Copy, Check, Bell,
+  Receipt, Plus, Send, Download, Trash2, CheckCircle, Eye, CreditCard, ExternalLink, Copy, Check, Bell, Loader2,
 } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { useDemoDownloadsBlocked } from '../context/DemoContext'
@@ -14,20 +15,24 @@ import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { Invoice, InvoiceLineItem } from '../lib/types'
 import { formatCurrency, formatDate, getNextNumber, computeInvoiceStatus } from '../lib/utils'
 import {
-  buildInvoiceEmailBody,
   getEnabledPaymentMethods,
   getPaymentLink,
   resolveInvoicePaymentMethods,
 } from '../lib/payments'
 import { generateInvoicePDF } from '../lib/pdf'
-import { fillTemplate } from '../lib/reports'
+import {
+  buildInvoiceEmailContent, buildReminderEmailContent, createStripeCheckout, sendEmailViaResend, verifyStripeSession,
+} from '../lib/integrations-api'
 
 export default function Invoices() {
   const { state, addInvoice, updateInvoice, deleteInvoice } = useStore()
+  const [searchParams, setSearchParams] = useSearchParams()
   const downloadsBlocked = useDemoDownloadsBlocked()
   const [showCreate, setShowCreate] = useState(false)
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null)
   const [copied, setCopied] = useState('')
+  const [busyId, setBusyId] = useState('')
+  const [toast, setToast] = useState('')
 
   const enabledMethods = getEnabledPaymentMethods(state.profile)
 
@@ -46,6 +51,27 @@ export default function Invoices() {
       setForm((f) => ({ ...f, selectedMethodIds: enabledMethods.map((m) => m.id) }))
     }
   }, [showCreate, enabledMethods, form.selectedMethodIds.length])
+
+  useEffect(() => {
+    const sessionId = searchParams.get('stripe_session')
+    if (!sessionId) return
+
+    verifyStripeSession(sessionId, state.integrationCredentials.stripeSecretKey || undefined)
+      .then((result) => {
+        if (result.paid && result.invoiceId) {
+          updateInvoice(result.invoiceId, {
+            status: 'paid',
+            paidAt: result.paidAt || new Date().toISOString(),
+          })
+          setToast('Payment received — invoice marked as paid.')
+        }
+      })
+      .finally(() => {
+        searchParams.delete('stripe_session')
+        searchParams.delete('stripe_success')
+        setSearchParams(searchParams, { replace: true })
+      })
+  }, [searchParams, setSearchParams, state.integrationCredentials.stripeSecretKey, updateInvoice])
 
   const clientOptions = [
     { value: '', label: 'Select client...' },
@@ -121,45 +147,89 @@ export default function Invoices() {
       paymentInstructions: form.paymentInstructions,
       sentAt: null,
       paidAt: null,
+      stripeCheckoutUrl: null,
+      stripeSessionId: null,
     })
     setShowCreate(false)
     resetForm()
   }
 
-  const handleSend = (invoice: Invoice) => {
-    const client = state.clients.find((c) => c.id === invoice.clientId)
-    const methods = resolveInvoicePaymentMethods(state.profile, invoice.paymentMethodIds)
-    const subject = encodeURIComponent(
-      `Invoice ${invoice.number} — ${formatCurrency(invoice.total, state.profile.defaultCurrency)}`
-    )
-    const body = encodeURIComponent(
-      buildInvoiceEmailBody(invoice, state.profile, client?.name || 'there', methods)
-    )
-    window.open(`mailto:${client?.email}?subject=${subject}&body=${body}`)
-    updateInvoice(invoice.id, { status: 'sent', sentAt: new Date().toISOString() })
+  const deliverEmail = async (to: string, subject: string, text: string) => {
+    if (!state.integrations.emailSendEnabled) return false
+    const result = await sendEmailViaResend({
+      credentials: state.integrationCredentials,
+      profileEmail: state.profile.email,
+      profileName: state.profile.name,
+      to,
+      subject,
+      text,
+    })
+    if (!result.ok) {
+      setToast(result.error || 'Email send failed')
+      return false
+    }
+    setToast('Email sent successfully')
+    return true
   }
 
-  const handleSendReminder = (invoice: Invoice) => {
-    const client = state.clients.find((c) => c.id === invoice.clientId)
-    const status = computeInvoiceStatus(invoice)
-    const templateType = status === 'overdue' ? 'payment_overdue' : 'payment_reminder'
-    const template = state.emailTemplates.find((t) => t.type === templateType)
-    const vars = {
-      clientName: client?.name || 'there',
-      invoiceNumber: invoice.number,
-      amount: formatCurrency(invoice.total, state.profile.defaultCurrency),
-      dueDate: formatDate(invoice.dueDate),
-      contractorName: state.profile.name || 'Your contractor',
+  const ensureStripeLink = async (invoice: Invoice): Promise<Invoice> => {
+    if (!state.integrations.stripeLivePayments) return invoice
+    if (invoice.stripeCheckoutUrl) return invoice
+    if (!state.integrationCredentials.stripeSecretKey && !state.integrations.stripeLivePayments) return invoice
+
+    setBusyId(invoice.id)
+    try {
+      const { url, sessionId } = await createStripeCheckout(invoice, state, state.integrationCredentials)
+      updateInvoice(invoice.id, { stripeCheckoutUrl: url, stripeSessionId: sessionId })
+      return { ...invoice, stripeCheckoutUrl: url, stripeSessionId: sessionId }
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Stripe checkout failed')
+      return invoice
+    } finally {
+      setBusyId('')
     }
-    const subject = encodeURIComponent(
-      template ? fillTemplate(template.subject, vars) : `Payment reminder: Invoice ${invoice.number}`
-    )
-    const body = encodeURIComponent(
-      template
-        ? fillTemplate(template.body, vars)
-        : `Hi ${vars.clientName},\n\nThis is a friendly reminder that invoice ${invoice.number} for ${vars.amount} is due on ${vars.dueDate}.\n\nThank you.`
-    )
-    window.open(`mailto:${client?.email}?subject=${subject}&body=${body}`)
+  }
+
+  const handleSend = async (invoice: Invoice) => {
+    let inv = invoice
+    if (state.integrations.stripeLivePayments) {
+      inv = await ensureStripeLink(invoice)
+    }
+    const { to, subject, text } = buildInvoiceEmailContent(inv, state)
+
+    if (state.integrations.emailSendEnabled && to) {
+      const sent = await deliverEmail(to, subject, text)
+      if (sent) {
+        updateInvoice(inv.id, { status: 'sent', sentAt: new Date().toISOString() })
+        return
+      }
+    }
+
+    const body = encodeURIComponent(text)
+    window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${body}`)
+    updateInvoice(inv.id, { status: 'sent', sentAt: new Date().toISOString() })
+  }
+
+  const handleSendReminder = async (invoice: Invoice) => {
+    let inv = invoice
+    if (state.integrations.stripeLivePayments && !invoice.stripeCheckoutUrl) {
+      inv = await ensureStripeLink(invoice)
+    }
+    const { to, subject, text } = buildReminderEmailContent(inv, state)
+
+    if (state.integrations.emailSendEnabled && to) {
+      await deliverEmail(to, subject, text)
+      return
+    }
+
+    window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`)
+  }
+
+  const handleStripeLink = async (invoice: Invoice) => {
+    const inv = await ensureStripeLink(invoice)
+    if (inv.stripeCheckoutUrl) {
+      copyText(inv.stripeCheckoutUrl, `stripe-${invoice.id}`)
+    }
   }
 
   const handleImportTime = () => {
@@ -210,6 +280,12 @@ export default function Invoices() {
           </div>
         }
       />
+
+      {toast && (
+        <Card className="mb-6 p-4 border-brand-200 bg-brand-50/50">
+          <p className="text-sm text-brand-800">{toast}</p>
+        </Card>
+      )}
 
       {enabledMethods.length === 0 && (
         <Card className="mb-6 p-4 border-amber-200 bg-amber-50">
@@ -302,6 +378,17 @@ export default function Invoices() {
                               <Button variant="ghost" size="sm" onClick={() => handleSendReminder(invoice)} title="Payment reminder">
                                 <Bell size={14} />
                               </Button>
+                              {state.integrations.stripeLivePayments && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleStripeLink(invoice)}
+                                  title="Copy Stripe payment link"
+                                  disabled={busyId === invoice.id}
+                                >
+                                  {busyId === invoice.id ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                                </Button>
+                              )}
                             </>
                           )}
                           {status !== 'paid' && status !== 'cancelled' && (

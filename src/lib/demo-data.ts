@@ -1,5 +1,5 @@
 import type { AppState } from './types'
-import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG } from './types'
+import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS } from './types'
 
 export interface DemoSessionInfo {
   contractorName: string
@@ -177,6 +177,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         paymentInstructions: 'Sample payment instructions only.',
         sentAt: isoDaysAgo(10),
         paidAt: null,
+        stripeCheckoutUrl: null,
+        stripeSessionId: null,
         createdAt: isoDaysAgo(10),
       },
       {
@@ -199,6 +201,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         paymentInstructions: '',
         sentAt: isoDaysAgo(30),
         paidAt: isoDaysAgo(18),
+        stripeCheckoutUrl: null,
+        stripeSessionId: null,
         createdAt: isoDaysAgo(30),
       },
     ],
@@ -392,6 +396,11 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
     ],
     taxSettings: { ...DEFAULT_TAX_SETTINGS },
     integrations: { ...DEFAULT_INTEGRATIONS },
+    integrationCredentials: { ...DEFAULT_INTEGRATION_CREDENTIALS, emailFrom: 'demo@workvault-preview.example', emailFromName: contractor },
+    calendarSyncMeta: { ...DEFAULT_CALENDAR_SYNC_META },
+    subcontractorPayments: [],
+    form1099Records: [],
+    tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },
     activeTimer: null,
     syncMeta: { lastSyncedAt: null, autoSync: false },
     demoSettings: {
@@ -415,5 +424,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
       allowDownloads: false,
       clientRoom: { ...DEFAULT_CLIENT_ROOM_CONFIG },
     },
+    teamMembers: [],
+    clientGuestInvites: [],
+    cursorCli: structuredClone(DEFAULT_CURSOR_CLI),
   }
 }

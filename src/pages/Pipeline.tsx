@@ -214,6 +214,8 @@ export default function Pipeline() {
       paymentInstructions: '',
       sentAt: null,
       paidAt: null,
+      stripeCheckoutUrl: null,
+      stripeSessionId: null,
     })
 
     updateMilestone(milestone.id, {

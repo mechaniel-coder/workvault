@@ -2,7 +2,9 @@ import type { AppState, Contract } from './types'
 import {
   DEFAULT_PROFILE, DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES,
   DEFAULT_DEMO_SETTINGS, DEFAULT_DEMO_PROJECT_TRANSFER, DEFAULT_CLIENT_ROOM_CONFIG,
+  DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS,
 } from './types'
+import { defaultSubcontractorTaxFields } from './tax-1099'
 
 const STORAGE_KEY = 'workvault-state'
 
@@ -29,14 +31,22 @@ export function createInitialState(): AppState {
     scopeEntries: [],
     vaultDocuments: [],
     subcontractors: [],
+    subcontractorPayments: [],
+    form1099Records: [],
+    tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },
     emailTemplates: seedEmailTemplates(),
     availabilityBlocks: [],
     milestones: [],
     taxSettings: { ...DEFAULT_TAX_SETTINGS },
     integrations: { ...DEFAULT_INTEGRATIONS },
+    integrationCredentials: { ...DEFAULT_INTEGRATION_CREDENTIALS },
+    calendarSyncMeta: { ...DEFAULT_CALENDAR_SYNC_META },
     activeTimer: null,
     syncMeta: { lastSyncedAt: null, autoSync: false },
     demoSettings: { ...DEFAULT_DEMO_SETTINGS },
+    teamMembers: [],
+    clientGuestInvites: [],
+    cursorCli: structuredClone(DEFAULT_CURSOR_CLI),
   }
 }
 
@@ -65,6 +75,8 @@ export function loadState(): AppState {
         ...inv,
         paymentMethodIds: inv.paymentMethodIds || [],
         paymentInstructions: inv.paymentInstructions || '',
+        stripeCheckoutUrl: inv.stripeCheckoutUrl ?? null,
+        stripeSessionId: inv.stripeSessionId ?? null,
       })),
       clients: (parsed.clients || []).map((c) => ({
         ...c,
@@ -77,12 +89,33 @@ export function loadState(): AppState {
       recurringInvoices: parsed.recurringInvoices || [],
       scopeEntries: parsed.scopeEntries || [],
       vaultDocuments: parsed.vaultDocuments || [],
-      subcontractors: parsed.subcontractors || [],
+      subcontractors: (parsed.subcontractors || []).map((s) => ({
+        ...defaultSubcontractorTaxFields(),
+        ...s,
+        w9OnFile: s.w9OnFile ?? false,
+        w9ReceivedAt: s.w9ReceivedAt ?? null,
+        requires1099: s.requires1099 ?? true,
+        entityType: s.entityType ?? 'individual',
+      })),
+      subcontractorPayments: parsed.subcontractorPayments || [],
+      form1099Records: parsed.form1099Records || [],
+      tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS, ...parsed.tax1099Settings },
       emailTemplates: parsed.emailTemplates?.length ? parsed.emailTemplates : seedEmailTemplates(),
       availabilityBlocks: parsed.availabilityBlocks || [],
       milestones: parsed.milestones || [],
       taxSettings: { ...DEFAULT_TAX_SETTINGS, ...parsed.taxSettings },
       integrations: { ...DEFAULT_INTEGRATIONS, ...parsed.integrations },
+      integrationCredentials: {
+        ...DEFAULT_INTEGRATION_CREDENTIALS,
+        ...parsed.integrationCredentials,
+        emailFrom: parsed.integrationCredentials?.emailFrom || parsed.profile?.email || '',
+        emailFromName: parsed.integrationCredentials?.emailFromName || parsed.profile?.name || '',
+      },
+      calendarSyncMeta: {
+        ...DEFAULT_CALENDAR_SYNC_META,
+        ...parsed.calendarSyncMeta,
+        eventMap: parsed.calendarSyncMeta?.eventMap || {},
+      },
       demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
         uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
         allowDownloads: parsed.demoSettings?.allowDownloads ?? false,
@@ -96,6 +129,17 @@ export function loadState(): AppState {
           ...parsed.demoSettings?.projectTransfer,
           deliverables: parsed.demoSettings?.projectTransfer?.deliverables || [],
         },
+      },
+      teamMembers: (parsed.teamMembers || []).map((m) => ({
+        ...m,
+        cursorCliAccess: m.cursorCliAccess ?? false,
+      })),
+      clientGuestInvites: parsed.clientGuestInvites || [],
+      cursorCli: {
+        settings: { ...DEFAULT_CURSOR_CLI.settings, ...parsed.cursorCli?.settings },
+        workflows: parsed.cursorCli?.workflows?.length
+          ? parsed.cursorCli.workflows
+          : DEFAULT_CURSOR_CLI.workflows,
       },
     }
   } catch {

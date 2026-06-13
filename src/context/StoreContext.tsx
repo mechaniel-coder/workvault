@@ -4,8 +4,11 @@ import type {
   EmailTemplate, Expense, HostedProject, IntegrationSettings, Invoice, License,
   Milestone, Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor,
   SyncMeta, TaxSettings, TimeEntry, VaultDocument, WorkProtection, WorkRecord,
-  DemoSettings,
+  DemoSettings, TeamMember, ClientGuestInvite, CursorCliSettings, CursorCliWorkflow,
+  IntegrationCredentials, CalendarSyncMeta, Form1099NECRecord, SubcontractorPayment, Tax1099Settings,
 } from '../lib/types'
+import { defaultCursorCliAccessForRole } from '../lib/cursor-cli'
+import { defaultSubcontractorTaxFields, syncForm1099Records as build1099RecordDrafts } from '../lib/tax-1099'
 import { applySignatureToContract, createInitialState, loadState, saveState } from '../lib/utils'
 import { autoSyncIfEnabled } from '../lib/sync'
 import { createExtendedCrud } from '../lib/store-crud'
@@ -43,6 +46,8 @@ type StoreContextType = {
   updateSyncMeta: (meta: Partial<SyncMeta>) => void
   updateTaxSettings: (data: Partial<TaxSettings>) => void
   updateIntegrations: (data: Partial<IntegrationSettings>) => void
+  updateIntegrationCredentials: (data: Partial<IntegrationCredentials>) => void
+  updateCalendarSyncMeta: (data: Partial<CalendarSyncMeta>) => void
   resetAll: () => void
   addProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project
   updateProject: (id: string, data: Partial<Project>) => void
@@ -65,6 +70,11 @@ type StoreContextType = {
   addSubcontractor: (data: Omit<Subcontractor, 'id' | 'createdAt'>) => Subcontractor
   updateSubcontractor: (id: string, data: Partial<Subcontractor>) => void
   deleteSubcontractor: (id: string) => void
+  addSubcontractorPayment: (data: Omit<SubcontractorPayment, 'id' | 'createdAt'>) => SubcontractorPayment
+  deleteSubcontractorPayment: (id: string) => void
+  updateForm1099Record: (id: string, data: Partial<Form1099NECRecord>) => void
+  syncForm1099Records: (year?: number) => Form1099NECRecord[]
+  updateTax1099Settings: (data: Partial<Tax1099Settings>) => void
   addEmailTemplate: (data: Omit<EmailTemplate, 'id' | 'createdAt'>) => EmailTemplate
   updateEmailTemplate: (id: string, data: Partial<EmailTemplate>) => void
   deleteEmailTemplate: (id: string) => void
@@ -76,6 +86,17 @@ type StoreContextType = {
   deleteMilestone: (id: string) => void
   generateClientPortalToken: (clientId: string) => string
   generateClientAppToken: (clientId: string) => string
+  addTeamMember: (data: Omit<TeamMember, 'id' | 'createdAt' | 'inviteToken' | 'status' | 'cursorCliAccess'> & { inviteToken?: string | null; status?: TeamMember['status']; cursorCliAccess?: boolean }) => TeamMember
+  updateTeamMember: (id: string, data: Partial<TeamMember>) => void
+  deleteTeamMember: (id: string) => void
+  generateTeamMemberInviteToken: (memberId: string) => string
+  addClientGuestInvite: (data: Omit<ClientGuestInvite, 'id' | 'createdAt' | 'token' | 'accessCount' | 'lastAccessedAt'>) => ClientGuestInvite
+  updateClientGuestInvite: (id: string, data: Partial<ClientGuestInvite>) => void
+  deleteClientGuestInvite: (id: string) => void
+  updateCursorCliSettings: (data: Partial<CursorCliSettings>) => void
+  addCursorCliWorkflow: (data: Omit<CursorCliWorkflow, 'id' | 'createdAt'>) => CursorCliWorkflow
+  updateCursorCliWorkflow: (id: string, data: Partial<CursorCliWorkflow>) => void
+  deleteCursorCliWorkflow: (id: string) => void
   updateDemoSettings: (data: Partial<DemoSettings>) => void
   isIsolated: boolean
   isReadOnly: boolean
@@ -151,6 +172,17 @@ export function StoreProvider({
     mutate((s) => ({
       ...s,
       clients: s.clients.map((c) => (c.id === clientId ? { ...c, clientAppToken: token } : c)),
+    }))
+    return token
+  }, [mutate])
+
+  const generateTeamMemberInviteToken = useCallback((memberId: string) => {
+    const token = crypto.randomUUID()
+    mutate((s) => ({
+      ...s,
+      teamMembers: s.teamMembers.map((m) =>
+        m.id === memberId ? { ...m, inviteToken: token, status: 'invited' as const } : m
+      ),
     }))
     return token
   }, [mutate])
@@ -335,6 +367,28 @@ export function StoreProvider({
     mutate((s) => ({ ...s, demoSettings: { ...s.demoSettings, ...data } }))
   }, [mutate])
 
+  const syncForm1099RecordsAction = useCallback((year?: number) => {
+    let result: Form1099NECRecord[] = []
+    mutate((s) => {
+      const taxYear = year ?? s.tax1099Settings.filingYear
+      const drafts = build1099RecordDrafts(s, taxYear)
+      const now = new Date().toISOString()
+      const records = drafts.map((d) => {
+        const existing = s.form1099Records.find((r) => r.taxYear === d.taxYear && r.payeeId === d.payeeId)
+        return {
+          ...d,
+          id: existing?.id ?? crypto.randomUUID(),
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now,
+        }
+      })
+      const others = s.form1099Records.filter((r) => r.taxYear !== taxYear)
+      result = records
+      return { ...s, form1099Records: [...others, ...records] }
+    })
+    return result
+  }, [mutate])
+
   const resetAll = useCallback(() => {
     if (isolated) {
       onBlockedAction?.()
@@ -378,6 +432,8 @@ export function StoreProvider({
         updateSyncMeta,
         updateTaxSettings: ext.updateTaxSettings,
         updateIntegrations: ext.updateIntegrations,
+        updateIntegrationCredentials: ext.updateIntegrationCredentials,
+        updateCalendarSyncMeta: ext.updateCalendarSyncMeta,
         resetAll,
         addProject: ext.projects.add,
         updateProject: ext.projects.update,
@@ -397,9 +453,17 @@ export function StoreProvider({
         addVaultDocument: ext.vaultDocuments.add,
         updateVaultDocument: ext.vaultDocuments.update,
         deleteVaultDocument: ext.vaultDocuments.delete,
-        addSubcontractor: ext.subcontractors.add,
+        addSubcontractor: (data) => ext.subcontractors.add({
+          ...defaultSubcontractorTaxFields(),
+          ...data,
+        }),
         updateSubcontractor: ext.subcontractors.update,
         deleteSubcontractor: ext.subcontractors.delete,
+        addSubcontractorPayment: ext.subcontractorPayments.add,
+        deleteSubcontractorPayment: ext.subcontractorPayments.delete,
+        updateForm1099Record: ext.form1099Records.update,
+        syncForm1099Records: syncForm1099RecordsAction,
+        updateTax1099Settings: ext.updateTax1099Settings,
         addEmailTemplate: ext.emailTemplates.add,
         updateEmailTemplate: ext.emailTemplates.update,
         deleteEmailTemplate: ext.emailTemplates.delete,
@@ -409,6 +473,27 @@ export function StoreProvider({
         addMilestone: ext.milestones.add,
         updateMilestone: ext.milestones.update,
         deleteMilestone: ext.milestones.delete,
+        addTeamMember: (data) => ext.teamMembers.add({
+          ...data,
+          inviteToken: data.inviteToken ?? null,
+          status: data.status ?? 'active',
+          cursorCliAccess: data.cursorCliAccess ?? defaultCursorCliAccessForRole(data.role),
+        }),
+        updateTeamMember: ext.teamMembers.update,
+        deleteTeamMember: ext.teamMembers.delete,
+        generateTeamMemberInviteToken,
+        addClientGuestInvite: (data) => ext.clientGuestInvites.add({
+          ...data,
+          token: crypto.randomUUID(),
+          accessCount: 0,
+          lastAccessedAt: null,
+        }),
+        updateClientGuestInvite: ext.clientGuestInvites.update,
+        deleteClientGuestInvite: ext.clientGuestInvites.delete,
+        updateCursorCliSettings: ext.updateCursorCliSettings,
+        addCursorCliWorkflow: ext.addCursorCliWorkflow,
+        updateCursorCliWorkflow: ext.updateCursorCliWorkflow,
+        deleteCursorCliWorkflow: ext.deleteCursorCliWorkflow,
         generateClientPortalToken,
         generateClientAppToken,
         updateDemoSettings,
