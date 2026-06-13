@@ -1,5 +1,5 @@
 import type { AppState } from './types'
-import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS, DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META } from './types'
+import { DEFAULT_TAX_SETTINGS, DEFAULT_INTEGRATIONS, DEFAULT_EMAIL_TEMPLATES, DEFAULT_CLIENT_ROOM_CONFIG, DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS, DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META, DEFAULT_CLOUD_STORAGE_META, DEFAULT_CLIENT_APP_LIFECYCLE } from './types'
 
 export interface DemoSessionInfo {
   contractorName: string
@@ -73,6 +73,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         notes: 'Sample client for preview purposes only.',
         portalToken: null,
         clientAppToken: null,
+        appLifecycle: { ...DEFAULT_CLIENT_APP_LIFECYCLE },
         createdAt: isoDaysAgo(90),
       },
       {
@@ -85,6 +86,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         notes: 'Demo account — not a real business.',
         portalToken: null,
         clientAppToken: null,
+        appLifecycle: { ...DEFAULT_CLIENT_APP_LIFECYCLE },
         createdAt: isoDaysAgo(45),
       },
       {
@@ -97,6 +99,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         notes: '',
         portalToken: null,
         clientAppToken: null,
+        appLifecycle: { ...DEFAULT_CLIENT_APP_LIFECYCLE },
         createdAt: isoDaysAgo(14),
       },
     ],
@@ -114,6 +117,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         hourlyRate: 95,
         billable: true,
         invoiced: false,
+        source: 'manual',
+        externalId: null,
         createdAt: isoDaysAgo(2),
       },
       {
@@ -129,6 +134,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         hourlyRate: 95,
         billable: true,
         invoiced: false,
+        source: 'manual',
+        externalId: null,
         createdAt: isoDaysAgo(1),
       },
     ],
@@ -150,6 +157,8 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         signedAt: isoDaysAgo(60),
         signatures: [],
         signingToken: null,
+        docusignEnvelopeId: null,
+        docusignSigningUrl: null,
         clientFileAccess: 'read',
         createdAt: isoDaysAgo(70),
         updatedAt: isoDaysAgo(60),
@@ -405,6 +414,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
     plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META },
     bankTransactions: [],
     gmailInboxCache: [],
+    cloudStorageMeta: { ...DEFAULT_CLOUD_STORAGE_META },
     subcontractorPayments: [],
     form1099Records: [],
     tax1099Settings: { ...DEFAULT_TAX1099_SETTINGS },

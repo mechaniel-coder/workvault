@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, Play, Square, Plus, Trash2, DollarSign } from 'lucide-react'
+import { Clock, Play, Square, Plus, Trash2, DollarSign, Download, Loader2 } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -8,10 +8,14 @@ import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import { formatCurrency, formatDateTime, formatDuration } from '../lib/utils'
+import { importFromToggl, importFromHarvest, mergeImportedEntries } from '../lib/time-import'
 
 export default function TimeTracker() {
   const { state, startTimer, stopTimer, addTimeEntry, deleteTimeEntry } = useStore()
   const [showManual, setShowManual] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [importBusy, setImportBusy] = useState('')
+  const [importStatus, setImportStatus] = useState('')
   const [form, setForm] = useState({
     projectName: '',
     clientId: '',
@@ -68,6 +72,26 @@ export default function TimeTracker() {
     setForm({ projectName: '', clientId: '', description: '', hours: '1', minutes: '0', billable: true })
   }
 
+  const handleImport = async (source: 'toggl' | 'harvest') => {
+    setImportBusy(source)
+    setImportStatus('')
+    try {
+      const imported = source === 'toggl'
+        ? await importFromToggl(state.integrationCredentials)
+        : await importFromHarvest(state.integrationCredentials)
+      const defaultClientId = state.clients[0]?.id || ''
+      const merged = mergeImportedEntries(state, imported, defaultClientId, state.profile.defaultHourlyRate)
+      merged.forEach((entry) => addTimeEntry(entry))
+      setImportStatus(`Imported ${merged.length} new ${source === 'toggl' ? 'Toggl' : 'Harvest'} entries (${imported.length - merged.length} skipped as duplicates).`)
+      if (merged.length > 0) setShowImport(false)
+    } catch (e) {
+      setImportStatus(e instanceof Error ? e.message : 'Import failed')
+    } finally {
+      setImportBusy('')
+    }
+  }
+
+  const importEnabled = state.integrations.togglImport || state.integrations.harvestImport
   const clientOptions = [
     { value: '', label: 'Select client...' },
     ...state.clients.map((c) => ({ value: c.id, label: c.name })),
@@ -79,9 +103,16 @@ export default function TimeTracker() {
         title="Time Tracker"
         description="Log every hour. Bill with confidence."
         action={
-          <Button variant="secondary" onClick={() => setShowManual(true)}>
-            <Plus size={16} /> Manual Entry
-          </Button>
+          <div className="flex gap-2">
+            {importEnabled && (
+              <Button variant="secondary" onClick={() => { setShowImport(true); setImportStatus('') }}>
+                <Download size={16} /> Import
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setShowManual(true)}>
+              <Plus size={16} /> Manual Entry
+            </Button>
+          </div>
         }
       />
 
@@ -225,6 +256,29 @@ export default function TimeTracker() {
             <Button variant="secondary" onClick={() => setShowManual(false)}>Cancel</Button>
             <Button onClick={handleManualAdd} disabled={!form.projectName}>Add Entry</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={showImport} onClose={() => setShowImport(false)} title="Import time entries">
+        <div className="space-y-4">
+          <p className="text-sm text-surface-600">
+            Pull recent entries from Toggl or Harvest. Duplicates are skipped automatically. Configure API tokens in Integrations.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {state.integrations.togglImport && (
+              <Button onClick={() => handleImport('toggl')} disabled={!!importBusy || !state.integrationCredentials.togglApiToken}>
+                {importBusy === 'toggl' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                Import from Toggl
+              </Button>
+            )}
+            {state.integrations.harvestImport && (
+              <Button onClick={() => handleImport('harvest')} disabled={!!importBusy || !state.integrationCredentials.harvestAccessToken}>
+                {importBusy === 'harvest' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                Import from Harvest
+              </Button>
+            )}
+          </div>
+          {importStatus && <p className="text-sm text-surface-600">{importStatus}</p>}
         </div>
       </Modal>
     </div>

@@ -6,9 +6,11 @@ import { DemoProvider } from '../context/DemoContext'
 import { ClientRoomProvider } from '../context/ClientRoomContext'
 import { StoreProvider } from '../context/StoreContext'
 import { resolveClientAppSession } from '../lib/client-app'
+import { isClientAppArchived } from '../lib/client-app-lifecycle'
 import { loadState } from '../lib/utils'
 import { ClientAppBanner } from '../components/ClientAppBanner'
 import { ClientAppLayout } from '../components/layout/ClientAppLayout'
+import { ClientAppClosureScreen } from '../components/ClientAppClosureScreen'
 import { Card } from '../components/ui/Card'
 import type { ClientAppSessionPublic } from '../lib/types'
 
@@ -86,7 +88,11 @@ export default function ClientAppShell() {
     async function load() {
       const info = await resolveClientAppSession(token!, loadState())
       if (cancelled) return
-      if (!info?.enabled) {
+      if (!info) {
+        setError('This client app link is invalid or has been revoked.')
+      } else if (isClientAppArchived(info) && info.closure) {
+        setSession(info)
+      } else if (!info.enabled) {
         setError('This client app link is invalid or has been revoked.')
       } else {
         setSession(info)
@@ -104,6 +110,10 @@ export default function ClientAppShell() {
         <Loader2 className="animate-spin text-brand-600" size={32} />
       </div>
     )
+  }
+
+  if (session?.closure) {
+    return <ClientAppClosureScreen closure={session.closure} />
   }
 
   if (error || !session || !token) {

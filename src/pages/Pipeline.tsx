@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Trash2, Check, FilePlus2, Landmark } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, FilePlus2, Landmark, FolderOpen, Loader2, RefreshCw } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -8,9 +8,12 @@ import { Textarea } from '../components/ui/Textarea'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
-import type { ProjectStage, Milestone } from '../lib/types'
+import type { CloudStorageProvider, ProjectStage, Milestone } from '../lib/types'
 import { PROJECT_STAGES } from '../lib/types'
 import { formatCurrency, formatDate, getNextNumber } from '../lib/utils'
+import {
+  listCloudFolderFiles, parseDriveFolderUrl, parseDropboxFolderUrl,
+} from '../lib/cloud-storage'
 
 const STAGE_ORDER: ProjectStage[] = PROJECT_STAGES.map((stage) => stage.id)
 
@@ -25,7 +28,10 @@ function getPreviousStage(stage: ProjectStage): ProjectStage | null {
 }
 
 export default function Pipeline() {
-  const { state, addProject, updateProject, deleteProject, addMilestone, updateMilestone, deleteMilestone, addInvoice } = useStore()
+  const {
+    state, addProject, updateProject, deleteProject, addMilestone, updateMilestone, deleteMilestone, addInvoice,
+    updateCloudStorageMeta,
+  } = useStore()
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [showMilestoneModal, setShowMilestoneModal] = useState(false)
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
@@ -45,6 +51,10 @@ export default function Pipeline() {
     amount: '',
     dueDate: '',
   })
+  const [folderModalProjectId, setFolderModalProjectId] = useState<string | null>(null)
+  const [folderForm, setFolderForm] = useState({ provider: 'google_drive' as CloudStorageProvider, folderUrl: '' })
+  const [folderBusy, setFolderBusy] = useState(false)
+  const [folderError, setFolderError] = useState('')
 
   const clientOptions = useMemo(
     () => [
@@ -230,6 +240,69 @@ export default function Pipeline() {
     projects: state.projects.filter((project) => project.stage === stage.id),
   }))
 
+  const openFolderModal = (projectId: string) => {
+    const link = state.cloudStorageMeta.projectFolders.find((f) => f.projectId === projectId)
+    setFolderForm({
+      provider: link?.provider || (state.integrations.googleDriveDeliverables ? 'google_drive' : 'dropbox'),
+      folderUrl: link?.folderUrl || '',
+    })
+    setFolderError('')
+    setFolderModalProjectId(projectId)
+  }
+
+  const saveFolderLink = async () => {
+    if (!folderModalProjectId) return
+    const parsed = folderForm.provider === 'google_drive'
+      ? parseDriveFolderUrl(folderForm.folderUrl)
+      : parseDropboxFolderUrl(folderForm.folderUrl)
+    if (!parsed) {
+      setFolderError('Could not parse folder URL — use a shared Google Drive or Dropbox folder link.')
+      return
+    }
+    setFolderBusy(true)
+    setFolderError('')
+    try {
+      const link = {
+        projectId: folderModalProjectId,
+        provider: folderForm.provider,
+        folderId: parsed.folderId,
+        folderName: parsed.folderName,
+        folderUrl: folderForm.folderUrl.trim(),
+      }
+      const others = state.cloudStorageMeta.projectFolders.filter((f) => f.projectId !== folderModalProjectId)
+      const files = await listCloudFolderFiles(link, state.integrationCredentials)
+      updateCloudStorageMeta({
+        projectFolders: [...others, link],
+        fileCache: { ...state.cloudStorageMeta.fileCache, [folderModalProjectId]: files },
+        lastSyncedAt: new Date().toISOString(),
+      })
+      setFolderModalProjectId(null)
+    } catch (e) {
+      setFolderError(e instanceof Error ? e.message : 'Could not link folder')
+    } finally {
+      setFolderBusy(false)
+    }
+  }
+
+  const refreshFolderFiles = async (projectId: string) => {
+    const link = state.cloudStorageMeta.projectFolders.find((f) => f.projectId === projectId)
+    if (!link) return
+    setFolderBusy(true)
+    try {
+      const files = await listCloudFolderFiles(link, state.integrationCredentials)
+      updateCloudStorageMeta({
+        fileCache: { ...state.cloudStorageMeta.fileCache, [projectId]: files },
+        lastSyncedAt: new Date().toISOString(),
+      })
+    } catch {
+      // ignore
+    } finally {
+      setFolderBusy(false)
+    }
+  }
+
+  const cloudEnabled = state.integrations.googleDriveDeliverables || state.integrations.dropboxDeliverables
+
   return (
     <div>
       <PageHeader
@@ -275,6 +348,8 @@ export default function Pipeline() {
                     {stage.projects.map((project) => {
                       const previousStage = getPreviousStage(project.stage)
                       const nextStage = getNextStage(project.stage)
+                      const folderLink = state.cloudStorageMeta.projectFolders.find((f) => f.projectId === project.id)
+                      const fileCount = state.cloudStorageMeta.fileCache[project.id]?.length || 0
                       return (
                         <Card key={project.id} className="p-4">
                           <div className="flex items-start justify-between gap-3">
@@ -292,6 +367,40 @@ export default function Pipeline() {
 
                           {project.description && (
                             <p className="mt-3 text-xs text-surface-600 line-clamp-3">{project.description}</p>
+                          )}
+
+                          {cloudEnabled && (
+                            <div className="mt-3 flex items-center gap-2 rounded-lg border border-surface-100 bg-surface-50 px-2 py-1.5">
+                              <FolderOpen size={12} className="text-amber-600 shrink-0" />
+                              {folderLink ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => openFolderModal(project.id)}
+                                    className="text-[10px] text-surface-600 truncate flex-1 text-left hover:text-brand-600"
+                                  >
+                                    {folderLink.folderName} · {fileCount} file{fileCount !== 1 ? 's' : ''}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => refreshFolderFiles(project.id)}
+                                    className="text-surface-400 hover:text-brand-600"
+                                    title="Refresh files"
+                                    disabled={folderBusy}
+                                  >
+                                    <RefreshCw size={12} className={folderBusy ? 'animate-spin' : ''} />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => openFolderModal(project.id)}
+                                  className="text-[10px] font-medium text-brand-600 hover:underline"
+                                >
+                                  Link deliverables folder
+                                </button>
+                              )}
+                            </div>
                           )}
 
                           <div className="mt-3 flex items-center gap-1">
@@ -550,6 +659,41 @@ export default function Pipeline() {
             </Button>
             <Button onClick={handleSaveMilestone} disabled={!milestoneForm.projectId || !milestoneForm.title}>
               {editingMilestoneId ? 'Save Milestone' : 'Create Milestone'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!folderModalProjectId}
+        onClose={() => setFolderModalProjectId(null)}
+        title="Link deliverables folder"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-surface-600">
+            Paste a shared Google Drive or Dropbox folder URL. Clients will see files from this folder in their hub.
+          </p>
+          <Select
+            label="Provider"
+            options={[
+              ...(state.integrations.googleDriveDeliverables ? [{ value: 'google_drive', label: 'Google Drive' }] : []),
+              ...(state.integrations.dropboxDeliverables ? [{ value: 'dropbox', label: 'Dropbox' }] : []),
+            ]}
+            value={folderForm.provider}
+            onChange={(e) => setFolderForm({ ...folderForm, provider: e.target.value as CloudStorageProvider })}
+          />
+          <Input
+            label="Folder URL"
+            value={folderForm.folderUrl}
+            onChange={(e) => setFolderForm({ ...folderForm, folderUrl: e.target.value })}
+            placeholder="https://drive.google.com/drive/folders/..."
+          />
+          {folderError && <p className="text-xs text-red-600">{folderError}</p>}
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setFolderModalProjectId(null)}>Cancel</Button>
+            <Button onClick={saveFolderLink} disabled={!folderForm.folderUrl.trim() || folderBusy}>
+              {folderBusy ? <Loader2 size={14} className="animate-spin" /> : null}
+              Save & sync
             </Button>
           </div>
         </div>

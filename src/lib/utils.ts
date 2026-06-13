@@ -4,6 +4,7 @@ import {
   DEFAULT_DEMO_SETTINGS, DEFAULT_DEMO_PROJECT_TRANSFER, DEFAULT_CLIENT_ROOM_CONFIG,
   DEFAULT_CURSOR_CLI, DEFAULT_INTEGRATION_CREDENTIALS, DEFAULT_CALENDAR_SYNC_META, DEFAULT_TAX1099_SETTINGS,
   DEFAULT_BOOKKEEPING_SYNC_META, DEFAULT_SCHEDULING_META, DEFAULT_PLAID_SYNC_META,
+  DEFAULT_CLOUD_STORAGE_META, DEFAULT_CLIENT_APP_LIFECYCLE,
 } from './types'
 import { defaultSubcontractorTaxFields } from './tax-1099'
 
@@ -47,6 +48,7 @@ export function createInitialState(): AppState {
     plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META },
     bankTransactions: [],
     gmailInboxCache: [],
+    cloudStorageMeta: { ...DEFAULT_CLOUD_STORAGE_META },
     activeTimer: null,
     syncMeta: { lastSyncedAt: null, autoSync: false },
     demoSettings: { ...DEFAULT_DEMO_SETTINGS },
@@ -75,6 +77,8 @@ export function loadState(): AppState {
         ...c,
         signatures: c.signatures || [],
         signingToken: c.signingToken ?? null,
+        docusignEnvelopeId: c.docusignEnvelopeId ?? null,
+        docusignSigningUrl: c.docusignSigningUrl ?? null,
         clientFileAccess: c.clientFileAccess ?? 'none',
       })),
       invoices: (parsed.invoices || []).map((inv) => ({
@@ -98,8 +102,17 @@ export function loadState(): AppState {
         ...c,
         portalToken: c.portalToken ?? null,
         clientAppToken: c.clientAppToken ?? null,
+        appLifecycle: {
+          ...DEFAULT_CLIENT_APP_LIFECYCLE,
+          ...c.appLifecycle,
+        },
       })),
       projects: parsed.projects || [],
+      timeEntries: (parsed.timeEntries || []).map((e) => ({
+        ...e,
+        source: e.source || 'manual',
+        externalId: e.externalId ?? null,
+      })),
       proposals: parsed.proposals || [],
       expenses: parsed.expenses || [],
       recurringInvoices: parsed.recurringInvoices || [],
@@ -146,6 +159,12 @@ export function loadState(): AppState {
       plaidSyncMeta: { ...DEFAULT_PLAID_SYNC_META, ...parsed.plaidSyncMeta },
       bankTransactions: parsed.bankTransactions || [],
       gmailInboxCache: parsed.gmailInboxCache || [],
+      cloudStorageMeta: {
+        ...DEFAULT_CLOUD_STORAGE_META,
+        ...parsed.cloudStorageMeta,
+        projectFolders: parsed.cloudStorageMeta?.projectFolders || [],
+        fileCache: parsed.cloudStorageMeta?.fileCache || {},
+      },
       demoSettings: { ...DEFAULT_DEMO_SETTINGS, ...parsed.demoSettings,
         uploadSecret: parsed.demoSettings?.uploadSecret ?? null,
         allowDownloads: parsed.demoSettings?.allowDownloads ?? false,

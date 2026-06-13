@@ -161,6 +161,16 @@ export default function SettingsPage() {
 
         <CloudSyncPanel />
 
+        <Card className="lg:col-span-2 p-6 border-brand-100 bg-brand-50/30">
+          <h2 className="text-base font-semibold text-surface-900 mb-1">Your data stays on your device</h2>
+          <p className="text-sm text-surface-600 leading-relaxed">
+            WorkVault is local-first — clients, invoices, and projects live in your browser storage by default.
+            Cloud sync and client app links are optional. When a project ends, archive the client WorkVault app from
+            the Clients page after saving tax docs locally; paid clients receive deliverables via your linked
+            Google Drive or Dropbox folders.
+          </p>
+        </Card>
+
         <DemoReviewSettings />
 
         <ClientRoomSettings />

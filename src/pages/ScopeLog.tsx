@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/Badge'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { ScopeEntry } from '../lib/types'
 import { formatDate } from '../lib/utils'
+import { notifySlackEvent } from '../lib/slack-notify'
 
 type ScopeForm = {
   title: string
@@ -93,6 +94,12 @@ export default function ScopeLogPage() {
       updateScopeEntry(editingEntry.id, payload)
     } else {
       addScopeEntry(payload)
+      void notifySlackEvent(state, 'scope_change', {
+        title: payload.title,
+        clientName: payload.clientName,
+        estimatedHours: payload.estimatedHours,
+        billable: payload.billable,
+      })
     }
 
     setModalOpen(false)

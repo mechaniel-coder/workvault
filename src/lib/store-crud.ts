@@ -4,6 +4,7 @@ import type {
   Project, Proposal, RecurringInvoice, ScopeEntry, Subcontractor, SubcontractorPayment,
   Tax1099Settings, TaxSettings, TeamMember, VaultDocument, CursorCliSettings,
   BookkeepingSyncMeta, SchedulingMeta, PlaidSyncMeta, BankTransaction, GmailThreadSummary,
+  CloudStorageMeta,
 } from './types'
 
 type Mutate = (fn: (s: AppState) => AppState) => void
@@ -201,6 +202,12 @@ export function createExtendedCrud(mutate: Mutate) {
     })),
     setGmailInboxCache: (threads: GmailThreadSummary[]) => {
       mutate((s) => ({ ...s, gmailInboxCache: threads }))
+    },
+    updateCloudStorageMeta: (data: Partial<CloudStorageMeta>) => {
+      mutate((s) => ({
+        ...s,
+        cloudStorageMeta: { ...s.cloudStorageMeta, ...data },
+      }))
     },
     updateCursorCliSettings: (data: Partial<CursorCliSettings>) => {
       mutate((s) => ({
