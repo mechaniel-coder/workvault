@@ -67,6 +67,7 @@ export function parseAppState(raw: string): AppState {
     profile: {
       ...DEFAULT_PROFILE,
       ...parsed.profile,
+      industryId: parsed.profile?.industryId || DEFAULT_PROFILE.industryId,
       paymentMethods: parsed.profile?.paymentMethods || [],
       defaultPaymentInstructions: parsed.profile?.defaultPaymentInstructions || '',
     },

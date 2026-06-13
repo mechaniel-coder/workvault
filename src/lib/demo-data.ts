@@ -61,6 +61,7 @@ export function createDemoState(session?: DemoSessionInfo): AppState {
         { id: 'demo-pm-2', type: 'stripe', label: 'Stripe (Demo)', details: 'https://checkout.stripe.example/demo', enabled: true },
       ],
       defaultPaymentInstructions: 'This is a demo environment. No real payments will be processed.',
+      industryId: 'software',
     },
     clients: [
       {

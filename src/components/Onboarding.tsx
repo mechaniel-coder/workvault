@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { ArrowRight, Box, CheckCircle2, Sparkles } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
+import { useIndustryOptional } from '../context/IndustryContext'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
+import {
+  INDUSTRY_LIST,
+  clearPreviewIndustry,
+  readPreviewIndustry,
+  type IndustryId,
+} from '../lib/industries'
 
 const ONBOARDING_KEY = 'workvault-onboarded'
 
@@ -17,7 +24,12 @@ function markOnboardingComplete(): void {
 
 export function Onboarding() {
   const { updateProfile, updateSyncMeta } = useStore()
+  const industryCtx = useIndustryOptional()
+  const previewIndustry = readPreviewIndustry()
   const [step, setStep] = useState(0)
+  const [industryId, setIndustryId] = useState<IndustryId>(
+    industryCtx?.industryId ?? previewIndustry ?? 'general',
+  )
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -25,12 +37,22 @@ export function Onboarding() {
     rate: '75',
   })
 
-  const completeSetup = (profile?: { name?: string; email?: string; defaultHourlyRate?: number }) => {
+  const config = INDUSTRY_LIST.find((i) => i.id === industryId) ?? INDUSTRY_LIST[0]
+  const totalSteps = 4
+
+  const completeSetup = (profile?: {
+    name?: string
+    email?: string
+    defaultHourlyRate?: number
+    industryId?: IndustryId
+  }) => {
     if (profile) {
       updateProfile(profile)
     }
     updateSyncMeta({ setupComplete: true })
     markOnboardingComplete()
+    clearPreviewIndustry()
+    industryCtx?.setIndustry(industryId)
   }
 
   const finish = () => {
@@ -38,6 +60,7 @@ export function Onboarding() {
       name: form.business || form.name,
       email: form.email,
       defaultHourlyRate: parseFloat(form.rate) || 75,
+      industryId,
     })
   }
 
@@ -48,7 +71,7 @@ export function Onboarding() {
 
       <div className="relative z-10 w-full max-w-lg">
         <div className="flex justify-center gap-2 mb-8">
-          {[0, 1, 2].map((s) => (
+          {Array.from({ length: totalSteps }).map((_, s) => (
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-500 ${
@@ -64,13 +87,10 @@ export function Onboarding() {
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl gradient-brand mb-6 shadow-lg shadow-brand-600/30">
                 <Box size={28} className="text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Welcome to WorkVault</h2>
-              <p className="text-white/60 text-sm leading-relaxed mb-8">
-                The all-in-one platform built for contract workers. Protect your work,
-                send contracts, track time, and manage invoices — all in one place.
-              </p>
+              <h2 className="text-2xl font-bold text-white mb-3">{config.onboarding.welcomeTitle}</h2>
+              <p className="text-white/60 text-sm leading-relaxed mb-8">{config.onboarding.welcomeBody}</p>
               <div className="grid grid-cols-2 gap-3 mb-8 text-left">
-                {['E-Signatures', 'Time Tracking', 'Invoicing', 'Work Protection'].map((f) => (
+                {config.onboarding.highlights.map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-white/70">
                     <CheckCircle2 size={14} className="text-brand-400 shrink-0" />
                     {f}
@@ -87,10 +107,56 @@ export function Onboarding() {
             <div className="onboarding-step">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles size={16} className="text-brand-400" />
+                <span className="text-xs font-medium text-brand-300 uppercase tracking-wider">Your industry</span>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-1">What kind of work do you do?</h2>
+              <p className="text-white/50 text-sm mb-5">
+                We&apos;ll tailor navigation, labels, and your dashboard for your trade.
+              </p>
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                {INDUSTRY_LIST.map((industry) => {
+                  const Icon = industry.icon
+                  const selected = industryId === industry.id
+                  return (
+                    <button
+                      key={industry.id}
+                      type="button"
+                      onClick={() => setIndustryId(industry.id)}
+                      className={`rounded-xl border p-3 text-left transition-all ${
+                        selected
+                          ? 'border-brand-400 bg-brand-500/20'
+                          : 'border-white/10 bg-white/5 hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon size={18} className={selected ? 'text-brand-200' : 'text-white/60'} />
+                      <p className="mt-2 text-sm font-medium text-white">{industry.shortLabel}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  className="flex-1 !bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
+                  onClick={() => setStep(0)}
+                >
+                  Back
+                </Button>
+                <Button className="flex-1" onClick={() => setStep(2)}>
+                  Continue <ArrowRight size={16} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="onboarding-step">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles size={16} className="text-brand-400" />
                 <span className="text-xs font-medium text-brand-300 uppercase tracking-wider">Setup</span>
               </div>
               <h2 className="text-xl font-bold text-white mb-1">Tell us about yourself</h2>
-              <p className="text-white/50 text-sm mb-6">Used on contracts and invoices</p>
+              <p className="text-white/50 text-sm mb-6">Used on {config.terminology.contracts.toLowerCase()} and invoices</p>
               <div className="space-y-4">
                 <Input
                   label="Your Name"
@@ -123,33 +189,40 @@ export function Onboarding() {
                 />
               </div>
               <div className="flex gap-3 mt-6">
-                <Button variant="secondary" className="flex-1 !bg-white/10 !text-white !border-white/20 hover:!bg-white/20" onClick={() => setStep(0)}>
+                <Button
+                  variant="secondary"
+                  className="flex-1 !bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
+                  onClick={() => setStep(1)}
+                >
                   Back
                 </Button>
-                <Button className="flex-1" onClick={() => setStep(2)} disabled={!form.name}>
+                <Button className="flex-1" onClick={() => setStep(3)} disabled={!form.name}>
                   Continue <ArrowRight size={16} />
                 </Button>
               </div>
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="text-center onboarding-step">
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 mb-6">
                 <CheckCircle2 size={32} className="text-emerald-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">You're all set!</h2>
+              <h2 className="text-2xl font-bold text-white mb-3">You&apos;re all set!</h2>
               <p className="text-white/60 text-sm leading-relaxed mb-2">
                 Welcome, <strong className="text-white">{form.name}</strong>.
               </p>
+              <p className="text-white/50 text-sm mb-2">
+                Your <strong className="text-white/70">{config.editionLabel}</strong> workspace is ready.
+              </p>
               <p className="text-white/50 text-sm mb-8">
-                Your workspace is ready. All data stays on your device — private and secure.
+                All data stays on your device — private and secure.
               </p>
               <Button size="lg" className="w-full" onClick={finish}>
                 Open WorkVault <ArrowRight size={16} />
               </Button>
               <button
-                onClick={() => completeSetup()}
+                onClick={() => completeSetup({ industryId })}
                 className="mt-4 text-xs text-white/30 hover:text-white/50 transition-colors"
               >
                 Skip for now

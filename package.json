@@ -1,21 +1,29 @@
 {
   "name": "workvault",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:desktop": "VITE_DESKTOP=1 vite",
     "build": "tsc -b && vite build",
     "build:desktop": "VITE_DESKTOP=1 tsc -b && VITE_DESKTOP=1 vite build",
+    "build:mobile": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "installer": "npm run tauri:build"
+    "installer": "npm run tauri:build",
+    "cap:sync": "npm run build:mobile && npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "selfhost": "npm run build && node deploy/server/index.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-fs": "^2.4.5",
     "@netlify/blobs": "^10.7.9",
@@ -32,6 +40,9 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/ios": "^7.0.1",
     "@tauri-apps/cli": "^2.10.1",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
@@ -46,6 +57,10 @@
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vite-plugin-pwa": "^1.0.3"
+  },
+  "capacitor": {
+    "platforms": ["ios", "android"]
   }
 }

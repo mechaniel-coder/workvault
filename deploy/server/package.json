@@ -1,0 +1,9 @@
+{
+  "name": "workvault-selfhost",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5"
+  }
+}

@@ -1,6 +1,7 @@
 import { useRef } from 'react'
-import { Settings, Download, Upload, Trash2, Plug } from 'lucide-react'
+import { Settings, Download, Upload, Trash2, Plug, Layers } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
+import { useIndustry } from '../context/IndustryContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
@@ -14,9 +15,11 @@ import { getEnabledProcessors, PAYMENT_PROCESSORS } from '../lib/payment-process
 import { DemoReviewSettings } from '../components/DemoReviewSettings'
 import { ClientRoomSettings } from '../components/ClientRoomSettings'
 import { DemoProjectDropzone } from '../components/DemoProjectDropzone'
+import { INDUSTRY_LIST } from '../lib/industries'
 
 export default function SettingsPage() {
   const { state, updateProfile, importData, resetAll } = useStore()
+  const { industryId, setIndustry } = useIndustry()
   const fileRef = useRef<HTMLInputElement>(null)
   const { profile } = state
 
@@ -62,6 +65,41 @@ export default function SettingsPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <div className="px-6 py-4 border-b border-surface-100">
+            <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
+              <Layers size={16} /> Industry & workspace
+            </h2>
+            <p className="text-xs text-surface-400 mt-1">
+              Tailors navigation, labels, dashboard, and welcome experience
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-2">
+              {INDUSTRY_LIST.map((industry) => {
+                const Icon = industry.icon
+                const selected = industryId === industry.id
+                return (
+                  <button
+                    key={industry.id}
+                    type="button"
+                    onClick={() => setIndustry(industry.id)}
+                    className={`rounded-xl border p-3 text-left transition-all ${
+                      selected
+                        ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500/30'
+                        : 'border-surface-200 hover:border-surface-300 hover:bg-surface-50'
+                    }`}
+                  >
+                    <Icon size={18} className={selected ? 'text-brand-600' : 'text-surface-400'} />
+                    <p className="mt-2 text-sm font-medium text-surface-900">{industry.shortLabel}</p>
+                    <p className="text-[11px] text-surface-500 mt-0.5 line-clamp-2">{industry.description}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </Card>
+
         <Card>
           <div className="px-6 py-4 border-b border-surface-100">
             <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">

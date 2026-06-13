@@ -42,6 +42,8 @@ export interface BusinessProfile {
   contractPrefix: string
   paymentMethods: PaymentMethod[]
   defaultPaymentInstructions: string
+  /** Tailors navigation, copy, and theme for the user's trade */
+  industryId: 'general' | 'creative' | 'software' | 'construction' | 'consulting' | 'marketing'
 }
 
 export interface Client {
@@ -980,6 +982,7 @@ export const DEFAULT_PROFILE: BusinessProfile = {
   contractPrefix: 'CTR',
   paymentMethods: [],
   defaultPaymentInstructions: '',
+  industryId: 'general',
 }
 
 export const DEFAULT_TAX_SETTINGS: TaxSettings = {

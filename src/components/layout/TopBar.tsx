@@ -4,32 +4,12 @@ import { useStore } from '../../context/StoreContext'
 import { useAuth } from '../../context/AuthContext'
 import { useDemoOptional } from '../../context/DemoContext'
 import { useClientAppOptional } from '../../context/ClientAppContext'
+import { useIndustryOptional } from '../../context/IndustryContext'
 import { formatDate } from '../../lib/utils'
 import { AiAssistantSearchTrigger } from '../AiAssistantPanel'
+import { pageTitleForPath } from '../../lib/industry-nav'
 
-const PAGE_TITLES: Record<string, string> = {
-  '/': 'Dashboard',
-  '/time': 'Time Tracker',
-  '/pipeline': 'Pipeline',
-  '/proposals': 'Proposals',
-  '/contracts': 'Contracts',
-  '/invoices': 'Invoices',
-  '/inbox': 'Inbox',
-  '/finance': 'Finance',
-  '/tax-1099': '1099 Filing',
-  '/scope': 'Scope Log',
-  '/documents': 'Documents',
-  '/tools': 'Tools',
-  '/subcontractors': 'Subcontractors',
-  '/protection': 'Work Protection',
-  '/licenses': 'Licenses',
-  '/hosting': 'Hosting',
-  '/records': 'Work Records',
-  '/clients': 'Clients',
-  '/team': 'Team',
-  '/integrations': 'Integrations',
-  '/cursor-cli': 'Cursor CLI',
-  '/settings': 'Settings',
+const FALLBACK_TITLES: Record<string, string> = {
   '/project': 'Your Project',
   '/about': 'Preview Info',
   '/review': 'Review & Sign-off',
@@ -42,12 +22,15 @@ export function TopBar({ demoMode, clientMode }: { demoMode?: boolean; clientMod
   const { user } = useAuth()
   const demo = useDemoOptional()
   const clientApp = useClientAppOptional()
+  const industry = useIndustryOptional()
 
   const pathKey = (demo?.basePath || clientApp?.basePath)
     ? location.pathname.replace(demo?.basePath || clientApp!.basePath, '') || '/'
     : location.pathname
 
-  const title = PAGE_TITLES[pathKey] || 'WorkVault'
+  const title = industry
+    ? pageTitleForPath(industry.config, pathKey)
+    : (FALLBACK_TITLES[pathKey] || 'WorkVault')
   const displayName = clientMode
     ? (state.profile.name || clientApp?.clientName || 'Client')
     : demoMode
@@ -56,7 +39,7 @@ export function TopBar({ demoMode, clientMode }: { demoMode?: boolean; clientMod
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-surface-200/80 bg-white/80 backdrop-blur-xl px-8 py-3.5">
+    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-surface-200/80 bg-white/80 backdrop-blur-xl px-4 py-3 sm:px-6 md:px-8 md:py-3.5">
       <div>
         <p className="text-[11px] font-medium uppercase tracking-wider text-surface-400">
           {formatDate(new Date().toISOString())}

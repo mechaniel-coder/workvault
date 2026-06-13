@@ -10,14 +10,29 @@ on:
         description: Release tag
         required: true
         type: string
-        default: 'v0.1.0'
+        default: 'v0.2.0'
 
 permissions:
   contents: write
 
 jobs:
   release:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            name: macOS (Apple Silicon)
+            args: '--target aarch64-apple-darwin'
+          - platform: windows-latest
+            name: Windows (x64)
+            args: ''
+          - platform: ubuntu-22.04
+            name: Linux (x64)
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    name: Build — ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,10 +43,22 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
       - run: npm ci
 
       - name: Set release tag
         id: tag
+        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "name=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
@@ -47,10 +74,35 @@ jobs:
           tagName: ${{ steps.tag.outputs.name }}
           releaseName: WorkVault ${{ steps.tag.outputs.name }}
           releaseBody: |
-            Download the `.dmg` below, drag WorkVault to Applications, and launch.
+            ## Downloads
 
-            Optional: Settings → Cloud Sync to sign in and enable Netlify backup and integrations.
+            | Platform | File |
+            |----------|------|
+            | **macOS** (Apple Silicon) | `.dmg` |
+            | **Windows** (64-bit) | `.exe` installer (NSIS) |
+            | **Linux** (64-bit) | `.AppImage` and/or `.deb` |
 
-            Setup guide: https://github.com/mechaniel-coder/workvault#download-the-app-recommended
+            ### macOS
+            1. Download the `.dmg`
+            2. Drag **WorkVault** to **Applications**
+            3. Launch from Applications or Spotlight
+
+            ### Windows
+            1. Download the `.exe` installer
+            2. Run the installer and follow the prompts
+            3. Launch **WorkVault** from the Start menu
+
+            ### Linux
+            1. Download `.AppImage` (chmod +x, run) or install the `.deb`
+            2. Launch **WorkVault** from your app menu
+
+            > First launch: if your OS blocks the app, allow it once (Mac: right-click → Open).
+
+            Optional: **Settings → Cloud Sync** to sign in and enable Netlify backup & integrations.
+
+            **Mobile:** install the PWA from [workvault.netlify.app](https://workvault.netlify.app) or build native apps — see [docs/PLATFORMS.md](docs/PLATFORMS.md).
+
+            [Setup guide](https://github.com/mechaniel-coder/workvault#download-the-app-recommended)
           releaseDraft: false
           prerelease: false
+          args: ${{ matrix.args }}

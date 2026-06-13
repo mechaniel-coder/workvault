@@ -3,6 +3,8 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { AiAssistantPanel } from '../AiAssistantPanel'
 import { AiAssistantProvider } from '../../context/AiAssistantContext'
+import { MobileNav } from './MobileNav'
+import { PwaInstallBanner } from './PwaInstallBanner'
 import { useStore } from '../../context/StoreContext'
 import { Clock } from 'lucide-react'
 import { formatDuration } from '../../lib/utils'
@@ -38,7 +40,7 @@ export function AppLayout() {
 
       <Sidebar />
 
-      <div className="pl-64 relative">
+      <div className="relative md:pl-64 pb-20 md:pb-0">
         <TopBar />
 
         {state.activeTimer && (
@@ -60,12 +62,14 @@ export function AppLayout() {
           </div>
         )}
 
-        <main className="px-8 py-6 max-w-7xl mx-auto">
+        <main className="px-4 py-4 sm:px-6 md:px-8 md:py-6 max-w-7xl mx-auto">
           <div key={location.pathname} className="page-enter">
             <Outlet />
           </div>
         </main>
       </div>
+      <MobileNav />
+      <PwaInstallBanner />
       <AiAssistantPanel />
     </div>
     </AiAssistantProvider>
