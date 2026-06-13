@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FileText, Plus, Send, Download, Trash2, Eye, PenLine, Link2, RefreshCw, Copy, Check } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
+import { useDemoDownloadsBlocked } from '../context/DemoContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
@@ -16,6 +17,7 @@ import { createSigningLink, fetchSigningStatus } from '../lib/sync'
 
 export default function Contracts() {
   const { state, addContract, updateContract, signContract, deleteContract } = useStore()
+  const downloadsBlocked = useDemoDownloadsBlocked()
   const [showCreate, setShowCreate] = useState(false)
   const [viewContract, setViewContract] = useState<Contract | null>(null)
   const [signContractTarget, setSignContractTarget] = useState<Contract | null>(null)
@@ -202,9 +204,11 @@ export default function Contracts() {
                   <Button variant="ghost" size="sm" onClick={() => setViewContract(contract)} title="View">
                     <Eye size={14} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => generateContractPDF(contract, state.profile)} title="Download PDF">
-                    <Download size={14} />
-                  </Button>
+                  {!downloadsBlocked && (
+                    <Button variant="ghost" size="sm" onClick={() => generateContractPDF(contract, state.profile)} title="Download PDF">
+                      <Download size={14} />
+                    </Button>
+                  )}
                   {!hasSignature(contract, 'contractor') && (
                     <Button variant="secondary" size="sm" onClick={() => setSignContractTarget(contract)}>
                       <PenLine size={14} /> Sign

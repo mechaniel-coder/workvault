@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import type { BusinessProfile, Contract, Invoice } from './types'
 import { formatCurrency, formatDate } from './utils'
+import { formatPaymentMethodLine, getPaymentLink, resolveInvoicePaymentMethods } from './payments'
 
 function addHeader(doc: jsPDF, profile: BusinessProfile, title: string) {
   doc.setFontSize(20)
@@ -131,6 +132,40 @@ export function generateInvoicePDF(invoice: Invoice, profile: BusinessProfile): 
     doc.setTextColor(71, 85, 105)
     const noteLines = doc.splitTextToSize(invoice.notes, 170)
     doc.text(noteLines, 20, y)
+    y += noteLines.length * 4 + 10
+  }
+
+  const methods = resolveInvoicePaymentMethods(profile, invoice.paymentMethodIds)
+  const payInstructions = invoice.paymentInstructions || profile.defaultPaymentInstructions
+  if (methods.length > 0 || payInstructions) {
+    if (y > 230) { doc.addPage(); y = 20 }
+    doc.setDrawColor(226, 232, 240)
+    doc.line(20, y, 190, y)
+    y += 10
+    doc.setFontSize(10)
+    doc.setTextColor(79, 70, 229)
+    doc.text('HOW TO PAY', 20, y)
+    y += 8
+    for (const method of methods) {
+      if (y > 260) { doc.addPage(); y = 20 }
+      doc.setFontSize(9)
+      doc.setTextColor(15, 23, 42)
+      doc.text(formatPaymentMethodLine(method), 22, y)
+      y += 5
+      const link = getPaymentLink(method)
+      if (link) {
+        doc.setTextColor(79, 70, 229)
+        doc.textWithLink('Pay online →', 22, y, { url: link })
+        y += 5
+      }
+    }
+    if (payInstructions) {
+      y += 3
+      doc.setFontSize(9)
+      doc.setTextColor(71, 85, 105)
+      const instrLines = doc.splitTextToSize(payInstructions, 170)
+      doc.text(instrLines, 22, y)
+    }
   }
 
   doc.save(`${invoice.number}.pdf`)

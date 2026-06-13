@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Shield, Plus, Download, Trash2, Lock, Fingerprint } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
+import { useDemoDownloadsBlocked } from '../context/DemoContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
@@ -22,6 +23,7 @@ const protectionTypes: { value: ProtectionType; label: string }[] = [
 
 export default function WorkProtection() {
   const { state, addWorkProtection, deleteWorkProtection } = useStore()
+  const downloadsBlocked = useDemoDownloadsBlocked()
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -141,13 +143,15 @@ export default function WorkProtection() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => generateWorkProtectionCertificate(item.title, item.hash, item.timestamp, state.profile)}
-                  >
-                    <Download size={14} /> Certificate
-                  </Button>
+                  {!downloadsBlocked && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => generateWorkProtectionCertificate(item.title, item.hash, item.timestamp, state.profile)}
+                    >
+                      <Download size={14} /> Certificate
+                    </Button>
+                  )}
                   <button onClick={() => deleteWorkProtection(item.id)} className="text-surface-400 hover:text-red-500 p-1">
                     <Trash2 size={14} />
                   </button>

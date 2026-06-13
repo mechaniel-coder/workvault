@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Plus, Trash2, Mail, Phone, Building2, Pencil } from 'lucide-react'
+import { Users, Plus, Trash2, Mail, Phone, Building2, Pencil, Link2, Check } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -8,12 +8,14 @@ import { Card } from '../components/ui/Card'
 import { Modal, PageHeader, EmptyState } from '../components/ui/Modal'
 import type { Client } from '../lib/types'
 import { formatCurrency, formatDate } from '../lib/utils'
+import { getPortalUrl, publishClientPortal } from '../lib/portal'
 
 export default function Clients() {
-  const { state, addClient, updateClient, deleteClient } = useStore()
+  const { state, addClient, updateClient, deleteClient, generateClientPortalToken, isIsolated } = useStore()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', address: '', notes: '' })
+  const [copiedId, setCopiedId] = useState('')
 
   const openCreate = () => {
     setEditing(null)
@@ -42,6 +44,15 @@ export default function Clients() {
     const revenue = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0)
     const hours = state.timeEntries.filter((e) => e.clientId === clientId).reduce((s, e) => s + e.durationMinutes, 0)
     return { contracts, revenue, hours: (hours / 60).toFixed(1) }
+  }
+
+  const handlePortalLink = async (client: Client) => {
+    const token = client.portalToken || generateClientPortalToken(client.id)
+    await publishClientPortal(token, { ...client, portalToken: token }, state)
+    const url = getPortalUrl(token)
+    await navigator.clipboard.writeText(url)
+    setCopiedId(client.id)
+    setTimeout(() => setCopiedId(''), 2000)
   }
 
   return (
@@ -124,6 +135,21 @@ export default function Clients() {
                 </div>
 
                 <p className="text-xs text-surface-400 mt-3">Added {formatDate(client.createdAt)}</p>
+
+                {!isIsolated && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full mt-3"
+                    onClick={() => handlePortalLink(client)}
+                  >
+                    {copiedId === client.id ? (
+                      <><Check size={14} /> Link Copied!</>
+                    ) : (
+                      <><Link2 size={14} /> Copy Client Portal Link</>
+                    )}
+                  </Button>
+                )}
               </Card>
             )
           })}

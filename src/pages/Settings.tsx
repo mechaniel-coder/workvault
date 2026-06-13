@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Settings, Download, Upload, Trash2 } from 'lucide-react'
+import { Settings, Download, Upload, Trash2, Plug } from 'lucide-react'
 import { useStore } from '../context/StoreContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -7,9 +7,13 @@ import { Card } from '../components/ui/Card'
 import { PageHeader } from '../components/ui/Modal'
 import { exportAllData, importAllData } from '../lib/utils'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
+import { PaymentMethodsSettings } from '../components/PaymentMethodsSettings'
+import { DemoReviewSettings } from '../components/DemoReviewSettings'
+import { ClientRoomSettings } from '../components/ClientRoomSettings'
+import { DemoProjectDropzone } from '../components/DemoProjectDropzone'
 
 export default function SettingsPage() {
-  const { state, updateProfile, importData, resetAll } = useStore()
+  const { state, updateProfile, updateIntegrations, importData, resetAll } = useStore()
   const fileRef = useRef<HTMLInputElement>(null)
   const { profile } = state
 
@@ -114,7 +118,48 @@ export default function SettingsPage() {
           </div>
         </Card>
 
+        <PaymentMethodsSettings />
+
+        <Card>
+          <div className="px-6 py-4 border-b border-surface-100">
+            <h2 className="text-base font-semibold text-surface-900 flex items-center gap-2">
+              <Plug size={16} /> Integrations
+            </h2>
+            <p className="text-xs text-surface-400 mt-1">Enable export formats and third-party features</p>
+          </div>
+          <div className="p-6 space-y-3">
+            {([
+              ['quickbooksExport', 'QuickBooks CSV export', 'Export invoices and expenses in QuickBooks format from Finance → Reports'],
+              ['xeroExport', 'Xero export format', 'Compatible CSV layout for Xero import'],
+              ['stripeLivePayments', 'Stripe live payment links', 'Use live Stripe URLs on invoices (configure in Payment Methods)'],
+              ['wiseMultiCurrency', 'Wise multi-currency', 'Show multi-currency payment options for international clients'],
+              ['googleCalendarSync', 'Google Calendar sync', 'Sync availability blocks to Google Calendar (coming soon)'],
+            ] as const).map(([key, label, desc]) => (
+              <label key={key} className="flex items-start gap-3 p-3 rounded-xl border border-surface-100 hover:bg-surface-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={state.integrations[key]}
+                  onChange={(e) => updateIntegrations({ [key]: e.target.checked })}
+                  className="mt-1 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
+                />
+                <div>
+                  <p className="text-sm font-medium text-surface-900">{label}</p>
+                  <p className="text-xs text-surface-400 mt-0.5">{desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </Card>
+
         <CloudSyncPanel />
+
+        <DemoReviewSettings />
+
+        <ClientRoomSettings />
+
+        <div className="lg:col-span-2">
+          <DemoProjectDropzone />
+        </div>
 
         <Card className="lg:col-span-2">
           <div className="px-6 py-4 border-b border-surface-100">
@@ -137,7 +182,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="mt-8 text-center text-xs text-surface-400">
-        <p>WorkVault v1.1 — Local-first with optional encrypted cloud sync.</p>
+        <p>WorkVault v2.0 — Local-first with optional encrypted cloud sync. Install as PWA from your browser menu.</p>
       </div>
     </div>
   )
