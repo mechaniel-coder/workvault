@@ -74,6 +74,10 @@ jobs:
           tagName: ${{ steps.tag.outputs.name }}
           releaseName: WorkVault ${{ steps.tag.outputs.name }}
           releaseBody: |
+            ## WorkVault v0.2.0
+
+            Local-first desktop app with **36 industry workspaces**, PWA mobile support, and optional Netlify sync.
+
             ## Downloads
 
             | Platform | File |
@@ -93,16 +97,20 @@ jobs:
             3. Launch **WorkVault** from the Start menu
 
             ### Linux
-            1. Download `.AppImage` (chmod +x, run) or install the `.deb`
+            1. Download `.AppImage` (`chmod +x` then run) or install the `.deb`
             2. Launch **WorkVault** from your app menu
 
-            > First launch: if your OS blocks the app, allow it once (Mac: right-click → Open).
+            > **First launch:** if your OS blocks the app, allow it once (Mac: right-click → Open).
 
-            Optional: **Settings → Cloud Sync** to sign in and enable Netlify backup & integrations.
+            ### What's new in v0.2.0
+            - 36 industry-tailored workspaces (nav, themes, dashboard copy)
+            - Industry welcome pages at [workvault.netlify.app/welcome](https://workvault.netlify.app/welcome)
+            - PWA mobile install from the web app
+            - Windows & Linux desktop builds (when CI assets are available)
 
-            **Mobile:** install the PWA from [workvault.netlify.app](https://workvault.netlify.app) or build native apps — see [docs/PLATFORMS.md](docs/PLATFORMS.md).
+            Optional: **Settings → Cloud Sync** for Netlify backup & integrations.
 
-            [Setup guide](https://github.com/mechaniel-coder/workvault#download-the-app-recommended)
+            [Setup guide](https://github.com/mechaniel-coder/workvault#download-the-app-recommended) · [All platforms](https://github.com/mechaniel-coder/workvault/blob/main/docs/PLATFORMS.md)
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
