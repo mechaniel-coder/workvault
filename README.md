@@ -24,8 +24,8 @@ WorkVault is a **desktop app** for Mac, Windows, and Linux. Your data lives on y
 | Platform | Download |
 |----------|----------|
 | **macOS** (Apple Silicon — M1/M2/M3/M4) | [**Download `.dmg`**](https://github.com/mechaniel-coder/workvault/releases/latest) |
-| **Windows** (64-bit) | [**Download `.exe` installer**](https://github.com/mechaniel-coder/workvault/releases/latest) |
-| **Linux** (64-bit) | [**Download `.AppImage` / `.deb`**](https://github.com/mechaniel-coder/workvault/releases/latest) |
+| **Windows** (64-bit) | **Coming soon** — `.exe` installer |
+| **Linux** (64-bit) | **Coming soon** — `.AppImage` / `.deb` |
 
 ### macOS — install in 3 steps
 
@@ -38,21 +38,17 @@ WorkVault is a **desktop app** for Mac, Windows, and Linux. Your data lives on y
 
 Data is stored at: `~/Library/Application Support/com.workvault.desktop/`
 
-### Windows — install in 3 steps
+### Windows — coming soon
 
-1. **Download** the `.exe` installer from [Releases](https://github.com/mechaniel-coder/workvault/releases/latest)
-2. **Run** the installer (SmartScreen may warn — click **More info → Run anyway** if needed)
-3. **Launch** WorkVault from the Start menu
+Windows `.exe` installer builds are **coming soon**. Until then, use the [web app](https://workvault.netlify.app) or watch [Releases](https://github.com/mechaniel-coder/workvault/releases/latest) for updates.
 
-Data is stored at: `%APPDATA%\com.workvault.desktop\`
+When available: run the installer from Releases and launch from the Start menu. Data will be stored at `%APPDATA%\com.workvault.desktop\`.
 
-### Linux — install
+### Linux — coming soon
 
-1. **Download** `.AppImage` or `.deb` from [Releases](https://github.com/mechaniel-coder/workvault/releases/latest)
-2. **AppImage:** `chmod +x WorkVault*.AppImage && ./WorkVault*.AppImage`
-3. **Deb:** `sudo dpkg -i workvault*.deb`
+Linux `.AppImage` and `.deb` packages are **coming soon**. Until then, use the [web app](https://workvault.netlify.app) or watch [Releases](https://github.com/mechaniel-coder/workvault/releases/latest) for updates.
 
-Data is stored at: `~/.local/share/com.workvault.desktop/`
+When available: install from Releases and launch from your app menu. Data will be stored at `~/.local/share/com.workvault.desktop/`.
 
 ---
 

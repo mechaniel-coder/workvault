@@ -80,33 +80,26 @@ jobs:
 
             ## Downloads
 
-            | Platform | File |
-            |----------|------|
-            | **macOS** (Apple Silicon) | `.dmg` |
-            | **Windows** (64-bit) | `.exe` installer (NSIS) |
-            | **Linux** (64-bit) | `.AppImage` and/or `.deb` |
+            | Platform | File | Status |
+            |----------|------|--------|
+            | **macOS** (Apple Silicon) | `.dmg` | Available below |
+            | **Windows** (64-bit) | `.exe` (NSIS) | **Coming soon** |
+            | **Linux** (64-bit) | `.AppImage` / `.deb` | **Coming soon** |
 
             ### macOS
-            1. Download the `.dmg`
+            1. Download the `.dmg` below
             2. Drag **WorkVault** to **Applications**
             3. Launch from Applications or Spotlight
 
-            ### Windows
-            1. Download the `.exe` installer
-            2. Run the installer and follow the prompts
-            3. Launch **WorkVault** from the Start menu
+            > **First launch:** if macOS blocks the app, right-click → **Open** once.
 
-            ### Linux
-            1. Download `.AppImage` (`chmod +x` then run) or install the `.deb`
-            2. Launch **WorkVault** from your app menu
-
-            > **First launch:** if your OS blocks the app, allow it once (Mac: right-click → Open).
+            ### Windows & Linux
+            Installers for Windows and Linux are **coming soon**. Use the [web app](https://workvault.netlify.app) in the meantime, or watch this release for new assets.
 
             ### What's new in v0.2.0
             - 36 industry-tailored workspaces (nav, themes, dashboard copy)
             - Industry welcome pages at [workvault.netlify.app/welcome](https://workvault.netlify.app/welcome)
             - PWA mobile install from the web app
-            - Windows & Linux desktop builds (when CI assets are available)
 
             Optional: **Settings → Cloud Sync** for Netlify backup & integrations.
 
