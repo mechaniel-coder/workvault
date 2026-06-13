@@ -1,3 +1,4 @@
+import { apiFetch } from '../api-client'
 export type AssistantChatMessage =
   | { role: 'user'; content: string }
   | { role: 'assistant'; content: string; toolCalls?: AssistantToolCall[] }
@@ -39,7 +40,7 @@ export async function callAssistantTurn(
     return { role: 'tool' as const, tool_call_id: m.toolCallId, content: m.content }
   })
 
-  const res = await fetch('/api/assistant', {
+  const res = await apiFetch('/api/assistant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: apiMessages, context }),

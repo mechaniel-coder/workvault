@@ -1,6 +1,7 @@
 import type {
   AppState, DemoDeliverableKind, DemoProjectTransfer, DemoSettings,
 } from './types'
+import { apiFetch } from './api-client'
 
 export interface DemoSessionPublic {
   enabled: boolean
@@ -49,7 +50,7 @@ export async function publishDemoSession(
   state: AppState
 ): Promise<boolean> {
   try {
-    const res = await fetch(`/api/demo/${token}`, {
+    const res = await apiFetch(`/api/demo/${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,7 +71,7 @@ export async function publishDemoSession(
 
 export async function revokeDemoSession(token: string): Promise<boolean> {
   try {
-    const res = await fetch(`/api/demo/${token}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/demo/${token}`, { method: 'DELETE' })
     return res.ok
   } catch {
     return false
@@ -79,7 +80,7 @@ export async function revokeDemoSession(token: string): Promise<boolean> {
 
 export async function fetchDemoSession(token: string): Promise<DemoSessionPublic | null> {
   try {
-    const res = await fetch(`/api/demo/${token}`)
+    const res = await apiFetch(`/api/demo/${token}`)
     if (!res.ok) return null
     const data = (await res.json()) as DemoSessionPublic
     return {
@@ -108,7 +109,7 @@ export async function uploadDemoFileRemote(
   const data = btoa(binary)
 
   try {
-    const res = await fetch(`/api/demo/${token}/assets`, {
+    const res = await apiFetch(`/api/demo/${token}/assets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileId, name, mimeType, size: file.size, data }),
@@ -130,7 +131,7 @@ export function getDemoFileDownloadUrl(token: string, fileId: string): string {
 
 export async function deleteDemoFileRemote(token: string, fileId: string): Promise<boolean> {
   try {
-    const res = await fetch(`/api/demo/${token}/assets/${fileId}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/demo/${token}/assets/${fileId}`, { method: 'DELETE' })
     return res.ok
   } catch {
     return false

@@ -1,4 +1,5 @@
 import type { ClientGuestInvite, ClientGuestRole } from './types'
+import { apiFetch } from './api-client'
 
 export const CLIENT_GUEST_ROLE_OPTIONS: { value: ClientGuestRole; label: string; description: string }[] = [
   {
@@ -50,7 +51,7 @@ export function loadLocalGuestInviteRecord(token: string): { invite: ClientGuest
 export async function publishGuestInvite(invite: ClientGuestInvite, session: import('./types').ClientAppSessionPublic): Promise<boolean> {
   saveLocalGuestInviteRecord(invite, session)
   try {
-    const res = await fetch(`/api/guest-invite/${invite.token}`, {
+    const res = await apiFetch(`/api/guest-invite/${invite.token}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ invite, session }),
@@ -63,7 +64,7 @@ export async function publishGuestInvite(invite: ClientGuestInvite, session: imp
 
 export async function fetchGuestInvite(token: string): Promise<{ invite: ClientGuestInvite; session: import('./types').ClientAppSessionPublic } | null> {
   try {
-    const res = await fetch(`/api/guest-invite/${token}`)
+    const res = await apiFetch(`/api/guest-invite/${token}`)
     if (!res.ok) return null
     return (await res.json()) as { invite: ClientGuestInvite; session: import('./types').ClientAppSessionPublic }
   } catch {

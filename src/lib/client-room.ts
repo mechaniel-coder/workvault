@@ -3,6 +3,7 @@ import type {
   ClientMessage, ClientRoomConfig, ClientRoomData, ClientSignOff, ClientSurveyResponse,
   DemoSettings,
 } from './types'
+import { apiFetch } from './api-client'
 import { DEFAULT_CLIENT_ROOM_DATA, DEFAULT_DEMO_PROJECT_TRANSFER } from './types'
 import { getPaymentLink } from './payments'
 import { buildClientDeliverables } from './cloud-storage'
@@ -147,7 +148,7 @@ function buildSessionFromLocal(token: string, state: AppState): ClientHubSession
 
 export async function fetchClientHubSession(token: string): Promise<ClientHubSession | null> {
   try {
-    const res = await fetch(`/api/client-room/${token}`)
+    const res = await apiFetch(`/api/client-room/${token}`)
     if (!res.ok) return null
     return (await res.json()) as ClientHubSession
   } catch {
@@ -183,7 +184,7 @@ type ClientAction =
 
 async function postAction(token: string, body: ClientAction): Promise<ClientRoomData | null> {
   try {
-    const res = await fetch(`/api/client-room/${token}`, {
+    const res = await apiFetch(`/api/client-room/${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -244,7 +245,7 @@ export async function clientRoomAction(token: string, body: ClientAction): Promi
 
 export async function publishClientRoomConfig(token: string, settings: DemoSettings, state: AppState): Promise<boolean> {
   try {
-    const res = await fetch(`/api/client-room/${token}`, {
+    const res = await apiFetch(`/api/client-room/${token}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

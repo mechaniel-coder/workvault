@@ -1,7 +1,8 @@
 import type { AppState, BankTransaction, IntegrationCredentials, Invoice } from './types'
+import { apiFetch } from './api-client'
 
 export async function createPlaidLinkToken(userId?: string): Promise<string> {
-  const res = await fetch('/api/plaid/link-token', {
+  const res = await apiFetch('/api/plaid/link-token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId }),
@@ -12,7 +13,7 @@ export async function createPlaidLinkToken(userId?: string): Promise<string> {
 }
 
 export async function exchangePlaidPublicToken(publicToken: string) {
-  const res = await fetch('/api/plaid/exchange', {
+  const res = await apiFetch('/api/plaid/exchange', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ publicToken }),
@@ -33,7 +34,7 @@ export async function fetchPlaidTransactions(
   cursor?: string | null,
   accountId?: string,
 ) {
-  const res = await fetch('/api/plaid/transactions', {
+  const res = await apiFetch('/api/plaid/transactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

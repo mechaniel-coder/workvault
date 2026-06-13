@@ -1,4 +1,5 @@
 import type { AppState } from './types'
+import { apiFetch } from './api-client'
 import { decryptData, encryptData, getStoredPassphrase } from './crypto'
 
 export interface SyncResult {
@@ -12,8 +13,8 @@ export interface SyncStatus {
   lastSyncedAt: string | null
 }
 
-async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  return fetch(path, {
+async function syncApiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  return apiFetch(path, {
     ...options,
     credentials: 'include',
     headers: {
@@ -25,7 +26,7 @@ async function apiFetch(path: string, options: RequestInit = {}): Promise<Respon
 
 export async function checkSyncAvailable(): Promise<boolean> {
   try {
-    const res = await apiFetch('/api/sync', { method: 'HEAD' })
+    const res = await syncApiFetch('/api/sync', { method: 'HEAD' })
     return res.status !== 404
   } catch {
     return false
@@ -36,7 +37,7 @@ export async function pushToCloud(state: AppState, passphrase: string): Promise<
   try {
     const payload = JSON.stringify({ ...state, activeTimer: null })
     const encrypted = await encryptData(payload, passphrase)
-    const res = await apiFetch('/api/sync', {
+    const res = await syncApiFetch('/api/sync', {
       method: 'PUT',
       body: JSON.stringify({ data: encrypted, updatedAt: new Date().toISOString() }),
     })
@@ -54,7 +55,7 @@ export async function pushToCloud(state: AppState, passphrase: string): Promise<
 
 export async function pullFromCloud(passphrase: string): Promise<{ ok: boolean; state?: AppState; error?: string; syncedAt?: string }> {
   try {
-    const res = await apiFetch('/api/sync')
+    const res = await syncApiFetch('/api/sync')
     if (res.status === 401) return { ok: false, error: 'Not signed in.' }
     if (res.status === 404) return { ok: false, error: 'No cloud backup found.' }
     if (!res.ok) return { ok: false, error: 'Failed to pull from cloud.' }
@@ -80,7 +81,7 @@ export async function createSigningLink(contract: {
   signatures: { role: string; name: string; signatureImage: string; signedAt: string }[]
 }): Promise<{ ok: boolean; token?: string; url?: string; error?: string }> {
   try {
-    const res = await apiFetch('/api/sign-link', {
+    const res = await syncApiFetch('/api/sign-link', {
       method: 'POST',
       body: JSON.stringify(contract),
     })
@@ -101,7 +102,7 @@ export async function fetchSigningStatus(token: string): Promise<{
   error?: string
 }> {
   try {
-    const res = await fetch(`/api/sign/${token}`)
+    const res = await syncApiFetch(`/api/sign/${token}`)
     if (!res.ok) return { ok: false, error: 'Signing record not found' }
     const data = await res.json()
     if (data.clientSignature) {

@@ -1,4 +1,5 @@
 import type { AppState, AvailabilityBlock, IntegrationCredentials, Invoice, Milestone } from './types'
+import { apiFetch } from './api-client'
 import { buildInvoiceEmailBody, resolveInvoicePaymentMethods } from './payments'
 import { formatPaymentLinksForEmail } from './payment-processors'
 import { fillTemplate } from './reports'
@@ -18,7 +19,7 @@ export async function createStripeCheckout(
   const successUrl = `${window.location.origin}/invoices?stripe_success=1`
   const cancelUrl = `${window.location.origin}/invoices?stripe_cancel=1`
 
-  const res = await fetch('/api/stripe/checkout', {
+  const res = await apiFetch('/api/stripe/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -55,7 +56,7 @@ export async function sendEmailViaResend(opts: {
   const from = opts.credentials.emailFrom || opts.profileEmail
   if (!from) return { ok: false, error: 'Configure a from email address in Integrations' }
 
-  const res = await fetch('/api/email/send', {
+  const res = await apiFetch('/api/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -78,7 +79,7 @@ export async function verifyStripeSession(
   sessionId: string,
   secretKey?: string,
 ): Promise<{ paid: boolean; invoiceId?: string; paidAt?: string }> {
-  const res = await fetch(`/api/stripe/verify/${sessionId}`, {
+  const res = await apiFetch(`/api/stripe/verify/${sessionId}`, {
     headers: secretKey ? { 'x-stripe-secret': secretKey } : {},
   })
   return res.json()
@@ -86,14 +87,14 @@ export async function verifyStripeSession(
 
 export async function startGmailOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/gmail/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/gmail/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Gmail OAuth start failed')
   return data.url as string
 }
 
 export async function exchangeGmailOAuthCode(code: string) {
-  const res = await fetch(`/api/gmail/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/gmail/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Gmail token exchange failed')
   return data as { refreshToken: string; email: string }
@@ -111,7 +112,7 @@ export async function sendEmailViaGmail(opts: {
   if (!opts.credentials.gmailRefreshToken) return { ok: false, error: 'Gmail not connected' }
   if (!from) return { ok: false, error: 'Configure a Gmail from address' }
 
-  const res = await fetch('/api/gmail/send', {
+  const res = await apiFetch('/api/gmail/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -131,7 +132,7 @@ export async function sendEmailViaGmail(opts: {
 
 export async function fetchGmailInbox(state: AppState) {
   const clientEmails = state.clients.map((c) => c.email).filter(Boolean)
-  const res = await fetch('/api/gmail/inbox', {
+  const res = await apiFetch('/api/gmail/inbox', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -224,14 +225,14 @@ export function buildReminderEmailContent(invoice: Invoice, state: AppState) {
 
 export async function startGoogleOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/google/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/google/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'OAuth start failed')
   return data.url as string
 }
 
 export async function exchangeGoogleOAuthCode(code: string) {
-  const res = await fetch(`/api/google/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/google/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Token exchange failed')
   return data as { refreshToken: string; email: string; calendarId: string }
@@ -288,7 +289,7 @@ export async function syncGoogleCalendar(
     .filter(([sourceId]) => !activeIds.has(sourceId))
     .map(([, googleId]) => googleId)
 
-  const res = await fetch('/api/google/calendar/sync', {
+  const res = await apiFetch('/api/google/calendar/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

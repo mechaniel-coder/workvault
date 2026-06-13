@@ -1,4 +1,5 @@
 import type { Contract, IntegrationCredentials } from './types'
+import { apiFetch } from './api-client'
 
 export async function createDocuSignEnvelope(
   contract: Contract,
@@ -10,7 +11,7 @@ export async function createDocuSignEnvelope(
     returnUrl: string
   },
 ) {
-  const res = await fetch('/api/docusign/envelope', {
+  const res = await apiFetch('/api/docusign/envelope', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

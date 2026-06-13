@@ -1,7 +1,8 @@
 import type { IntegrationCredentials } from './types'
+import { apiFetch } from './api-client'
 
 export async function fetchCalcomBookingLink(credentials: IntegrationCredentials) {
-  const res = await fetch('/api/scheduling/calcom', {
+  const res = await apiFetch('/api/scheduling/calcom', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -16,7 +17,7 @@ export async function fetchCalcomBookingLink(credentials: IntegrationCredentials
 }
 
 export async function fetchCalendlyBookingLink(credentials: IntegrationCredentials) {
-  const res = await fetch('/api/scheduling/calendly', {
+  const res = await apiFetch('/api/scheduling/calendly', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

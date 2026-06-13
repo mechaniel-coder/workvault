@@ -1,15 +1,16 @@
 import type { AppState, IntegrationCredentials, Invoice } from './types'
+import { apiFetch } from './api-client'
 
 export async function startQuickBooksOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/quickbooks/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/quickbooks/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'QuickBooks OAuth start failed')
   return data.url as string
 }
 
 export async function exchangeQuickBooksOAuthCode(code: string) {
-  const res = await fetch(`/api/quickbooks/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/quickbooks/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'QuickBooks token exchange failed')
   return data as { refreshToken: string; realmId: string; companyName: string }
@@ -17,14 +18,14 @@ export async function exchangeQuickBooksOAuthCode(code: string) {
 
 export async function startXeroOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/xero/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/xero/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Xero OAuth start failed')
   return data.url as string
 }
 
 export async function exchangeXeroOAuthCode(code: string) {
-  const res = await fetch(`/api/xero/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/xero/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Xero token exchange failed')
   return data as { refreshToken: string; tenantId: string; tenantName: string }
@@ -61,7 +62,7 @@ export async function syncQuickBooks(state: AppState, credentials: IntegrationCr
       category: e.category,
     }))
 
-  const res = await fetch('/api/quickbooks/sync', {
+  const res = await apiFetch('/api/quickbooks/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -101,7 +102,7 @@ export async function syncXero(state: AppState, credentials: IntegrationCredenti
       category: e.category,
     }))
 
-  const res = await fetch('/api/xero/sync', {
+  const res = await apiFetch('/api/xero/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

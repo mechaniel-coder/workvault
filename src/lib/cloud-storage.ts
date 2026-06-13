@@ -1,15 +1,16 @@
 import type { AppState, CloudFile, IntegrationCredentials, ProjectDeliverableLink } from './types'
+import { apiFetch } from './api-client'
 
 export async function startGoogleDriveOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/google-drive/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/google-drive/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Google Drive OAuth failed')
   return data.url as string
 }
 
 export async function exchangeGoogleDriveOAuthCode(code: string) {
-  const res = await fetch(`/api/google-drive/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/google-drive/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Google Drive token exchange failed')
   return data as { refreshToken: string; email: string }
@@ -17,14 +18,14 @@ export async function exchangeGoogleDriveOAuthCode(code: string) {
 
 export async function startDropboxOAuth(): Promise<string> {
   const origin = window.location.origin
-  const res = await fetch(`/api/dropbox/oauth/start?origin=${encodeURIComponent(origin)}`)
+  const res = await apiFetch(`/api/dropbox/oauth/start?origin=${encodeURIComponent(origin)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Dropbox OAuth failed')
   return data.url as string
 }
 
 export async function exchangeDropboxOAuthCode(code: string) {
-  const res = await fetch(`/api/dropbox/oauth/token?code=${encodeURIComponent(code)}`)
+  const res = await apiFetch(`/api/dropbox/oauth/token?code=${encodeURIComponent(code)}`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Dropbox token exchange failed')
   return data as { refreshToken: string; email: string }
@@ -34,7 +35,7 @@ export async function listCloudFolderFiles(
   link: ProjectDeliverableLink,
   credentials: IntegrationCredentials,
 ): Promise<CloudFile[]> {
-  const res = await fetch('/api/cloud/files', {
+  const res = await apiFetch('/api/cloud/files', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

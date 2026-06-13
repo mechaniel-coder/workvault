@@ -1,4 +1,5 @@
 import type { AppState, IntegrationCredentials, IntegrationSettings, Invoice, InvoicePaymentLink, PaymentProcessorId } from './types'
+import { apiFetch } from './api-client'
 
 export const PAYMENT_PROCESSORS: {
   id: PaymentProcessorId
@@ -163,7 +164,7 @@ export async function createProcessorCheckout(
     credentials: state.integrationCredentials,
   }
 
-  const res = await fetch(`/api/payments/${processor}/checkout`, {
+  const res = await apiFetch(`/api/payments/${processor}/checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -184,7 +185,7 @@ export async function verifyProcessorPayment(
   externalId: string,
   credentials: IntegrationCredentials,
 ): Promise<{ paid: boolean; invoiceId?: string; paidAt?: string }> {
-  const res = await fetch(`/api/payments/${processor}/verify/${externalId}`, {
+  const res = await apiFetch(`/api/payments/${processor}/verify/${externalId}`, {
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
     body: JSON.stringify({ credentials }),

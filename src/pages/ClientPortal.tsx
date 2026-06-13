@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from '../lib/api-client'
 import { useParams } from 'react-router-dom'
 import { FileText, Receipt, Loader2 } from 'lucide-react'
 import { Card } from '../components/ui/Card'
@@ -21,7 +22,7 @@ export default function ClientPortal() {
 
   useEffect(() => {
     if (!token) return
-    fetch(`/api/portal/${token}`)
+    apiFetch(`/api/portal/${token}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Portal not found or expired')
         return res.json() as Promise<PortalData>

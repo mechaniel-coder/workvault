@@ -6,20 +6,17 @@ import { Input } from './ui/Input'
 
 const ONBOARDING_KEY = 'workvault-onboarded'
 
+/** @deprecated Use syncMeta.setupComplete in app state */
 export function isOnboardingComplete(): boolean {
   return localStorage.getItem(ONBOARDING_KEY) === 'true'
 }
 
-export function markOnboardingComplete(): void {
+function markOnboardingComplete(): void {
   localStorage.setItem(ONBOARDING_KEY, 'true')
 }
 
-interface OnboardingProps {
-  onComplete: () => void
-}
-
-export function Onboarding({ onComplete }: OnboardingProps) {
-  const { updateProfile } = useStore()
+export function Onboarding() {
+  const { updateProfile, updateSyncMeta } = useStore()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
     name: '',
@@ -28,14 +25,20 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     rate: '75',
   })
 
+  const completeSetup = (profile?: { name?: string; email?: string; defaultHourlyRate?: number }) => {
+    if (profile) {
+      updateProfile(profile)
+    }
+    updateSyncMeta({ setupComplete: true })
+    markOnboardingComplete()
+  }
+
   const finish = () => {
-    updateProfile({
+    completeSetup({
       name: form.business || form.name,
       email: form.email,
       defaultHourlyRate: parseFloat(form.rate) || 75,
     })
-    markOnboardingComplete()
-    onComplete()
   }
 
   return (
@@ -44,7 +47,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(99,102,241,0.3)_0%,transparent_70%)]" />
 
       <div className="relative z-10 w-full max-w-lg">
-        {/* Step indicators */}
         <div className="flex justify-center gap-2 mb-8">
           {[0, 1, 2].map((s) => (
             <div
@@ -147,7 +149,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 Open WorkVault <ArrowRight size={16} />
               </Button>
               <button
-                onClick={() => { markOnboardingComplete(); onComplete() }}
+                onClick={() => completeSetup()}
                 className="mt-4 text-xs text-white/30 hover:text-white/50 transition-colors"
               >
                 Skip for now

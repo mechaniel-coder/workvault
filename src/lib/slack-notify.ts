@@ -1,4 +1,5 @@
 import type { AppState, SlackEventType } from './types'
+import { apiFetch } from './api-client'
 
 type EventPayload = {
   invoice_paid: { number: string; clientName: string; amount: string }
@@ -21,7 +22,7 @@ export async function notifySlackEvent<E extends SlackEventType>(
 
   const text = formatSlackMessage(event, payload, state.profile.name || 'WorkVault')
   try {
-    await fetch('/api/slack/notify', {
+    await apiFetch('/api/slack/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

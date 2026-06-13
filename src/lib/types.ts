@@ -309,6 +309,8 @@ export interface WorkRecord {
 export interface SyncMeta {
   lastSyncedAt: string | null
   autoSync: boolean
+  /** User finished first-run setup — persisted with app data */
+  setupComplete: boolean
 }
 
 export type DemoRoomMode = 'demo' | 'review'

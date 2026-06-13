@@ -12,12 +12,15 @@ import type {
 import { DEFAULT_CLIENT_APP_LIFECYCLE } from '../lib/types'
 import { defaultCursorCliAccessForRole } from '../lib/cursor-cli'
 import { defaultSubcontractorTaxFields, syncForm1099Records as build1099RecordDrafts } from '../lib/tax-1099'
-import { applySignatureToContract, createInitialState, loadState, saveState } from '../lib/utils'
+import { applySignatureToContract, createInitialState, loadState, loadStateAsync, saveState } from '../lib/utils'
 import { autoSyncIfEnabled } from '../lib/sync'
 import { createExtendedCrud } from '../lib/store-crud'
+import { isDesktopApp } from '../lib/platform'
+import { LoadingScreen } from '../components/LoadingScreen'
 
 type StoreContextType = {
   state: AppState
+  storageReady: boolean
   updateProfile: (profile: Partial<BusinessProfile>) => void
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'portalToken' | 'clientAppToken' | 'appLifecycle'>) => Client
   updateClient: (id: string, data: Partial<Client>) => void
@@ -135,11 +138,31 @@ export function StoreProvider({
   readOnly = false,
   onBlockedAction,
 }: StoreProviderProps) {
-  const [state, setState] = useState<AppState>(() => (isolated ? (initialState ?? createInitialState()) : loadState()))
+  const [state, setState] = useState<AppState>(() => {
+    if (isolated) return initialState ?? createInitialState()
+    if (isDesktopApp()) return createInitialState()
+    return loadState()
+  })
+  const [storageReady, setStorageReady] = useState(() => isolated || !isDesktopApp())
 
   useEffect(() => {
-    if (!isolated) saveState(state)
-  }, [state, isolated])
+    if (isolated || !isDesktopApp()) return
+    let mounted = true
+    loadStateAsync().then((loaded) => {
+      if (mounted) {
+        setState(loaded)
+        setStorageReady(true)
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [isolated])
+
+  useEffect(() => {
+    if (!storageReady || isolated) return
+    saveState(state)
+  }, [state, isolated, storageReady])
 
   useEffect(() => {
     if (isolated || !state.syncMeta.autoSync) return
@@ -425,10 +448,15 @@ export function StoreProvider({
     setState(persist(createInitialState(), false))
   }, [isolated, onBlockedAction])
 
+  if (!storageReady) {
+    return <LoadingScreen onComplete={() => {}} minDuration={400} />
+  }
+
   return (
     <StoreContext.Provider
       value={{
         state,
+        storageReady,
         updateProfile,
         addClient,
         updateClient,

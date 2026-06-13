@@ -1,4 +1,5 @@
 import type { AppState, Client } from './types'
+import { apiFetch } from './api-client'
 import { computeInvoiceStatus } from './utils'
 
 export async function publishClientPortal(
@@ -28,7 +29,7 @@ export async function publishClientPortal(
     }))
 
   try {
-    const res = await fetch(`/api/portal/${token}`, {
+    const res = await apiFetch(`/api/portal/${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -8,6 +8,7 @@ import { PageHeader } from '../components/ui/Modal'
 import { exportAllData, importAllData } from '../lib/utils'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
 import { ClientWorkspaceImportCard } from '../components/ClientWorkspaceImportCard'
+import { dataDirectoryHint, isDesktopApp } from '../lib/platform'
 import { PaymentMethodsSettings } from '../components/PaymentMethodsSettings'
 import { getEnabledProcessors, PAYMENT_PROCESSORS } from '../lib/payment-processors'
 import { DemoReviewSettings } from '../components/DemoReviewSettings'
@@ -163,12 +164,24 @@ export default function SettingsPage() {
         <CloudSyncPanel />
 
         <Card className="lg:col-span-2 p-6 border-brand-100 bg-brand-50/30">
-          <h2 className="text-base font-semibold text-surface-900 mb-1">Local-first + Netlify</h2>
+          <h2 className="text-base font-semibold text-surface-900 mb-1">
+            {isDesktopApp() ? 'WorkVault Desktop — local on your Mac' : 'Local-first + Netlify'}
+          </h2>
           <p className="text-sm text-surface-600 leading-relaxed">
-            Your business data lives on this device first. Netlify optionally hosts client workspace links,
-            encrypted backup sync, integrations (AI, OAuth, payments), and team features — so clients can open a
-            link online while you both keep local copies. Send clients a <strong>.workvault</strong> file and/or a
-            hosted link from the Clients page.
+            {isDesktopApp() ? (
+              <>
+                This is the <strong>desktop app</strong>. Your business data is saved on disk at{' '}
+                <code className="text-xs bg-surface-100 px-1 py-0.5 rounded">{dataDirectoryHint()}</code>.
+                Netlify is optional — for sync, client hosted links, AI, OAuth, and payments when you&apos;re online.
+              </>
+            ) : (
+              <>
+                Your business data lives on this device first. Netlify optionally hosts client workspace links,
+                encrypted backup sync, integrations (AI, OAuth, payments), and team features — so clients can open a
+                link online while you both keep local copies. Send clients a <strong>.workvault</strong> file and/or a
+                hosted link from the Clients page. Install the Mac app from the project <code className="text-xs">.dmg</code> installer.
+              </>
+            )}
           </p>
         </Card>
 
