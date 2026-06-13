@@ -1,0 +1,58 @@
+name: Release Mac app
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag (e.g. v0.1.0)
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build WorkVault.dmg
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: .
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.version }}
+          releaseName: WorkVault ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.version }}
+          releaseBody: |
+            ## WorkVault ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.version }}
+
+            ### Install (macOS — Apple Silicon)
+            1. Download **WorkVault_*_aarch64.dmg** below
+            2. Open the disk image and drag **WorkVault** to **Applications**
+            3. Launch from Applications or Spotlight
+
+            > First launch: if macOS blocks the app, right-click **WorkVault → Open** once.
+
+            ### After install
+            - Complete the one-time setup wizard
+            - Optional: **Settings → Cloud Sync** to sign in and enable Netlify backup & integrations
+
+            Full guide: [README](https://github.com/mechaniel-coder/workvault#download-the-app-recommended)
+          releaseDraft: false
+          prerelease: false
+          args: --target aarch64-apple-darwin
