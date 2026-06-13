@@ -103,7 +103,7 @@ export function ClientAppLifecyclePanel({ client }: Props) {
           <p className="text-xs font-semibold uppercase tracking-wider text-surface-500 flex items-center gap-1.5">
             <Archive size={12} /> Client WorkVault lifecycle
           </p>
-          <p className="text-[10px] text-surface-400 mt-0.5">Data lives on your device first — cloud sync is optional</p>
+          <p className="text-[10px] text-surface-400 mt-0.5">Local device + optional Netlify sync</p>
         </div>
         {archived && (
           <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500 bg-surface-200 px-2 py-0.5 rounded">

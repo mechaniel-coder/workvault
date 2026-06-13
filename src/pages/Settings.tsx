@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card'
 import { PageHeader } from '../components/ui/Modal'
 import { exportAllData, importAllData } from '../lib/utils'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
+import { ClientWorkspaceImportCard } from '../components/ClientWorkspaceImportCard'
 import { PaymentMethodsSettings } from '../components/PaymentMethodsSettings'
 import { getEnabledProcessors, PAYMENT_PROCESSORS } from '../lib/payment-processors'
 import { DemoReviewSettings } from '../components/DemoReviewSettings'
@@ -162,14 +163,16 @@ export default function SettingsPage() {
         <CloudSyncPanel />
 
         <Card className="lg:col-span-2 p-6 border-brand-100 bg-brand-50/30">
-          <h2 className="text-base font-semibold text-surface-900 mb-1">Your data stays on your device</h2>
+          <h2 className="text-base font-semibold text-surface-900 mb-1">Local-first + Netlify</h2>
           <p className="text-sm text-surface-600 leading-relaxed">
-            WorkVault is local-first — clients, invoices, and projects live in your browser storage by default.
-            Cloud sync and client app links are optional. When a project ends, archive the client WorkVault app from
-            the Clients page after saving tax docs locally; paid clients receive deliverables via your linked
-            Google Drive or Dropbox folders.
+            Your business data lives on this device first. Netlify optionally hosts client workspace links,
+            encrypted backup sync, integrations (AI, OAuth, payments), and team features — so clients can open a
+            link online while you both keep local copies. Send clients a <strong>.workvault</strong> file and/or a
+            hosted link from the Clients page.
           </p>
         </Card>
+
+        <ClientWorkspaceImportCard />
 
         <DemoReviewSettings />
 
@@ -200,7 +203,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="mt-8 text-center text-xs text-surface-400">
-        <p>WorkVault v2.0 — Local-first with optional encrypted cloud sync. Install as PWA from your browser menu.</p>
+        <p>WorkVault v2.0 — Local-first on your device, with optional Netlify sync, hosted client links, and integrations. Install as PWA from your browser menu. Clients can open at <a href="/open-client" className="text-brand-600 hover:underline">/open-client</a>.</p>
       </div>
     </div>
   )

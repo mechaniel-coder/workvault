@@ -37,6 +37,7 @@ import Tools from './pages/Tools'
 import Subcontractors from './pages/Subcontractors'
 import Tax1099 from './pages/Tax1099'
 import Inbox from './pages/Inbox'
+import ClientWorkspaceOpen from './pages/ClientWorkspaceOpen'
 
 function ProtectedApp() {
   return (
@@ -96,6 +97,7 @@ export default function App() {
           <Routes>
             <Route path="/sign/:token" element={<SignContractPage />} />
             <Route path="/portal/:token" element={<ClientPortal />} />
+            <Route path="/open-client" element={<ClientWorkspaceOpen />} />
             <Route path="/hub/:token" element={<ClientHub />} />
             <Route path="/client/:token/*" element={<ClientAppShell />}>
               {clientAppRoutes}
